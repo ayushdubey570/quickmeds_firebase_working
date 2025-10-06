@@ -5,23 +5,22 @@ import { View, TouchableOpacity } from 'react-native';
 const CustomTabBarButton = ({ children, onPress }) => (
     <TouchableOpacity
         style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            transform: [{ translateY: -35 }],
+            transform: [{ translateY: -30 }],
         }}
         onPress={onPress}
     >
         <View style={{
             width: 70,
             height: 70,
+            flexDirection: 'row',           
             borderRadius: 35,
             backgroundColor: '#4c669f',
             justifyContent: 'center',
             alignItems: 'center',
-            shadowColor: '#4c669f',
-            shadowOffset: { width: 0, height: 5 },
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.2,
+            shadowRadius: 10,
             elevation: 10,
         }}>
             {children}
@@ -80,7 +79,7 @@ export default function TabsLayout() {
         options={{
             tabBarLabel: '',
             tabBarIcon: () => (
-                <Feather name="plus" size={28} color="#FFFFFF" />
+                <Feather name="plus" size={30} color="#FFFFFF" />
             ),
             tabBarButton: (props) => (
                 <CustomTabBarButton {...props} />

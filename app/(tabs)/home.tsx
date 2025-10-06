@@ -131,10 +131,6 @@ export default function HomeScreen() {
 
       </ScrollView>
 
-        <TouchableOpacity style={styles.floatingButton} onPress={() => router.push('/add-medicine')}>
-            <Feather name="plus" size={30} color="#FFFFFF" />
-        </TouchableOpacity>
-
         <Modal
             animationType="slide"
             transparent={true}
@@ -275,22 +271,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1E293B',
   },
-    floatingButton: {
-        position: 'absolute',
-        bottom: 90,
-        right: 20,
-        backgroundColor: '#4c669f',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#4c669f',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 10,
-    },
   centeredView: {
     flex: 1,
     justifyContent: "center",
