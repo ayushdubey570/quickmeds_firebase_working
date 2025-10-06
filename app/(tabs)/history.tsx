@@ -1,42 +1,50 @@
-import { StyleSheet, Text, View, SafeAreaView, ScrollView } from "react-native";
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, FlatList } from "react-native";
 import { FontAwesome5 } from '@expo/vector-icons';
 
 const historyData = [
-  { day: 'Mon', total: 6, taken: 6, missed: 0 },
-  { day: 'Tue', total: 6, taken: 5, missed: 1 },
-  { day: 'Wed', total: 6, taken: 6, missed: 0 },
-  { day: 'Thu', total: 6, taken: 4, missed: 2 },
-  { day: 'Fri', total: 6, taken: 6, missed: 0 },
-  { day: 'Sat', total: 6, taken: 5, missed: 1 },
-  { day: 'Sun', total: 6, taken: 6, missed: 0 },
+  { date: '2024-05-20', day: 'Monday', medications: [
+    { name: 'Metformin', time: '8:00 AM', status: 'taken' },
+    { name: 'Lisinopril', time: '8:00 AM', status: 'taken' },
+    { name: 'Atorvastatin', time: '8:00 PM', status: 'missed' },
+  ]},
+  { date: '2024-05-19', day: 'Sunday', medications: [
+    { name: 'Metformin', time: '8:00 AM', status: 'taken' },
+    { name: 'Lisinopril', time: '8:00 AM', status: 'taken' },
+    { name: 'Atorvastatin', time: '8:00 PM', status: 'taken' },
+  ]},
+  // Add more daily data here
 ];
 
 export default function HistoryScreen() {
+
+    const renderItem = ({ item }) => (
+        <View style={styles.dayContainer}>
+            <Text style={styles.dateText}>{`${item.day}, ${item.date}`}</Text>
+            {item.medications.map((med, index) => (
+                <View key={index} style={styles.medicationCard}>
+                    <FontAwesome5 name={med.status === 'taken' ? 'check-circle' : 'times-circle'} size={24} color={med.status === 'taken' ? '#22C55E' : '#EF4444'} />
+                    <View style={styles.medicationInfo}>
+                        <Text style={styles.medicationName}>{med.name}</Text>
+                        <Text style={styles.medicationTime}>{med.time}</Text>
+                    </View>
+                    <Text style={[styles.statusText, {color: med.status === 'taken' ? '#22C55E' : '#EF4444'}]}>{med.status}</Text>
+                </View>
+            ))}
+        </View>
+    );
+
   return (
     <SafeAreaView style={styles.container}>
        <View style={styles.header}>
-            <Text style={styles.headerTitle}>7-Day History</Text>
+            <Text style={styles.headerTitle}>Medication History</Text>
         </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.gridContainer}>
-          {historyData.map((item, index) => (
-            <View key={index} style={styles.dayCard}>
-              <Text style={styles.dayText}>{item.day}</Text>
-              <View style={styles.statusContainer}>
-                <View style={styles.statusItem}>
-                    <FontAwesome5 name="check-circle" size={20} color="#22C55E" />
-                    <Text style={styles.statusText}>{item.taken}</Text>
-                </View>
-                <View style={styles.statusItem}>
-                    <FontAwesome5 name="times-circle" size={20} color="#EF4444" />
-                    <Text style={styles.statusText}>{item.missed}</Text>
-                </View>
-              </View>
-              <Text style={styles.totalText}>Total: {item.total}</Text>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+        <FlatList
+            data={historyData}
+            renderItem={renderItem}
+            keyExtractor={item => item.date}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{paddingBottom: 20}}
+        />
     </SafeAreaView>
   );
 }
@@ -47,60 +55,55 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F4F8',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 20,
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#1E293B',
   },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    padding: 10,
+  dayContainer: {
+      marginVertical: 10,
   },
-  dayCard: {
+  dateText: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#374151',
+      paddingHorizontal: 20,
+      marginBottom: 10,
+  },
+  medicationCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 15,
+    borderRadius: 10,
     padding: 15,
-    margin: 10,
-    width: '40%',
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  dayText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1E3A8A',
-    marginBottom: 15,
-  },
-  statusContainer: {
+    marginHorizontal: 20,
+    marginBottom: 10,
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: 15,
-  },
-  statusItem: {
     alignItems: 'center',
+    elevation: 2,
   },
-  statusText: {
+  medicationInfo: {
+      flex: 1,
+      marginHorizontal: 15,
+  },
+  medicationName: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#475569',
-      marginTop: 5,
+      color: '#111827',
   },
-  totalText: {
+  medicationTime: {
       fontSize: 14,
       color: '#6B7280',
+      marginTop: 2,
+  },
+  statusText: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      textTransform: 'capitalize',
   }
 });

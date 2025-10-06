@@ -1,15 +1,19 @@
-import { StyleSheet, Text, View, SafeAreaView, Dimensions } from "react-native";
-import { BarChart } from "react-native-chart-kit";
+import { StyleSheet, Text, View, SafeAreaView, Dimensions, ScrollView } from "react-native";
+import { LineChart } from "react-native-chart-kit";
+import { FontAwesome5 } from '@expo/vector-icons';
 
 const screenWidth = Dimensions.get("window").width;
 
 const chartData = {
-  labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+  labels: ["Jan", "Feb", "Mar", "Apr", "May"],
   datasets: [
     {
-      data: [85, 92, 78, 95],
+      data: [75, 88, 92, 85, 95],
+      color: (opacity = 1) => `rgba(13, 110, 253, ${opacity})`, // optional
+      strokeWidth: 2 // optional
     },
   ],
+  legend: ["Adherence Rate"]
 };
 
 export default function ReportsScreen() {
@@ -17,114 +21,123 @@ export default function ReportsScreen() {
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-            <Text style={styles.headerTitle}>Monthly Reports</Text>
+            <Text style={styles.headerTitle}>Adherence Reports</Text>
         </View>
+        <ScrollView>
 
-        <View style={styles.chartContainer}>
-            <Text style={styles.chartTitle}>Compliance Rate (%)</Text>
-            <BarChart
-                data={chartData}
-                width={screenWidth - 40}
-                height={220}
-                yAxisLabel=""
-                yAxisSuffix="%"
-                chartConfig={{
-                    backgroundColor: "#FFFFFF",
-                    backgroundGradientFrom: "#FFFFFF",
-                    backgroundGradientTo: "#FFFFFF",
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(29, 41, 59, ${opacity})`,
-                    style: {
-                        borderRadius: 16,
-                    },
-                    propsForDots: {
-                        r: "6",
-                        strokeWidth: "2",
-                        stroke: "#3B82F6",
-                    },
-                }}
-                style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                }}
-            />
-        </View>
-
-        <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-                <Text style={styles.statLabel}>Total Taken</Text>
-                <Text style={styles.statValue}>124</Text>
+            <View style={styles.chartCard}>
+                <Text style={styles.cardTitle}>Monthly Adherence</Text>
+                <LineChart
+                    data={chartData}
+                    width={screenWidth - 50}
+                    height={220}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                />
             </View>
-            <View style={styles.statCard}>
-                <Text style={styles.statLabel}>Total Missed</Text>
-                <Text style={styles.statValue}>12</Text>
-            </View>
-        </View>
 
+            <View style={styles.summarySection}>
+                <Text style={styles.sectionTitle}>Adherence Summary</Text>
+                <View style={styles.summaryBox}>
+                    <View style={styles.summaryItem}>
+                        <FontAwesome5 name="check-circle" size={24} color="#28A745" />
+                        <Text style={styles.summaryValue}>92%</Text>
+                        <Text style={styles.summaryLabel}>Overall Adherence</Text>
+                    </View>
+                    <View style={styles.summaryItem}>
+                        <FontAwesome5 name="pills" size={24} color="#17A2B8" />
+                        <Text style={styles.summaryValue}>15</Text>
+                        <Text style={styles.summaryLabel}>Medications</Text>
+                    </View>
+                </View>
+            </View>
+
+        </ScrollView>
     </SafeAreaView>
   );
 }
 
+const chartConfig = {
+    backgroundGradientFrom: "#FFFFFF",
+    backgroundGradientTo: "#FFFFFF",
+    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    strokeWidth: 2, // optional, default 3
+    barPercentage: 0.5,
+    useShadows: true,
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#F4F6F8',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 20,
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0'
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#1E293B',
+    color: '#333',
   },
-  chartContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginHorizontal: 20,
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  chartTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#1E293B',
-      marginBottom: 10,
-  },
-  statsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      marginTop: 30,
-      marginHorizontal: 20,
-  },
-  statCard: {
+  chartCard: {
       backgroundColor: '#FFFFFF',
+      borderRadius: 20,
+      margin: 20,
+      padding: 15,
+      alignItems: 'center',
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 2},
+      shadowOpacity: 0.1,
+      shadowRadius: 4
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+  },
+  chart: {
       borderRadius: 16,
+  },
+  summarySection: {
+      paddingHorizontal: 20,
+  },
+  sectionTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: '#333',
+      marginBottom: 15,
+  },
+  summaryBox: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+  },
+  summaryItem: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 15,
       padding: 20,
-      width: '45%',
+      width: '48%',
       alignItems: 'center',
       elevation: 3,
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 1},
+      shadowOpacity: 0.1,
+      shadowRadius: 2
   },
-  statLabel: {
-      fontSize: 16,
-      color: '#475569',
-      fontWeight: '500',
-  },
-  statValue: {
-      fontSize: 28,
+  summaryValue: {
+      fontSize: 26,
       fontWeight: 'bold',
-      color: '#3B82F6',
-      marginTop: 8,
+      color: '#007BFF',
+      marginVertical: 8,
+  },
+  summaryLabel: {
+      fontSize: 14,
+      color: '#6C757D',
   }
 });

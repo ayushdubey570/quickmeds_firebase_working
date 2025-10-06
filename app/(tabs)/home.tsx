@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, SafeAreaView, Animated, Dimensions } from "react-native";
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useRef } from 'react';
 
 const medications = [
   {
@@ -29,54 +30,135 @@ const medications = [
   },
 ];
 
+const { width } = Dimensions.get('window');
+const cardPadding = 20;
+const statCardWidth = (width - cardPadding * 4) / 3;
+
 export default function HomeScreen() {
   const router = useRouter();
+  const statsAnim = useRef(new Animated.Value(0)).current;
+  const medicationAnims = useRef(medications.map(() => new Animated.Value(0))).current;
+  const fabAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.timing(statsAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+
+    const animations = medicationAnims.map((anim) => {
+        return Animated.timing(anim, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+        });
+    });
+    Animated.stagger(100, animations).start();
+  }, []);
+
+  const statCardAnimationStyle = {
+      opacity: statsAnim,
+      transform: [
+          {
+              translateY: statsAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [50, 0],
+              })
+          },
+      ],
+  };
+
+  const onPressInFab = () => {
+    Animated.spring(fabAnim, {
+        toValue: 0.95,
+        useNativeDriver: true,
+    }).start();
+  };
+
+  const onPressOutFab = () => {
+    Animated.spring(fabAnim, {
+        toValue: 1,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+    }).start();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Dashboard</Text>
-          <TouchableOpacity onPress={() => router.push('/settings')}>
-            <Image
-              source={{ uri: "https://i.imgur.com/8i2j8zL.png" }} // Placeholder image
-              style={styles.profilePic}
-            />
-          </TouchableOpacity>
+            <View>
+                <Text style={styles.headerGreeting}>Hello,</Text>
+                <Text style={styles.headerName}>Ayush Kumar</Text>
+            </View>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/settings')}>
+                <Image
+                source={{ uri: "https://i.imgur.com/8i2j8zL.png" }}
+                style={styles.profilePic}
+                />
+            </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={() => router.push('/reports')}>
-            <View style={styles.summaryCard}>
-            <Text style={styles.summaryText}>Today's Progress</Text>
-            <Text style={styles.summaryValue}>2 / 4 Taken</Text>
-            <View style={styles.progressBar}>
-                <View style={styles.progress} />
-            </View>
-            </View>
-        </TouchableOpacity>
+        <View style={styles.statsContainer}>
+            <Animated.View style={[styles.statCard, statCardAnimationStyle]}>
+                <Text style={styles.statValue}>10</Text>
+                <Text style={styles.statLabel}>Taken</Text>
+            </Animated.View>
+            <Animated.View style={[styles.statCard, statCardAnimationStyle, {transitionDelay: '100ms'}]}>
+                <Text style={styles.statValue}>2</Text>
+                <Text style={styles.statLabel}>Missed</Text>
+            </Animated.View>
+            <Animated.View style={[styles.statCard, statCardAnimationStyle, {transitionDelay: '200ms'}]}>
+                <Text style={styles.statValue}>3</Text>
+                <Text style={styles.statLabel}>Pending</Text>
+            </Animated.View>
+        </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
 
         <View style={styles.medicationSection}>
           <Text style={styles.sectionTitle}>Today's Medicines</Text>
-          <TouchableOpacity onPress={() => router.push('/history')}>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/history')}>
             <Text style={styles.seeAll}>See All</Text>
           </TouchableOpacity>
         </View>
 
         {medications.map((med, index) => (
-          <View key={index} style={styles.medicationCard}>
-            <FontAwesome5 name={med.status === 'taken' ? 'check-circle' : med.status === 'missed' ? 'times-circle' : 'clock'} size={24} color={med.status === 'taken' ? '#22C55E' : med.status === 'missed' ? '#EF4444' : '#F59E0B'} />
-            <View style={styles.medicationInfo}>
-              <Text style={styles.medicationName}>{med.name}</Text>
-              <Text style={styles.medicationDosage}>{med.dosage}</Text>
-            </View>
-            <Text style={styles.medicationTime}>{med.time}</Text>
-          </View>
+            <Animated.View key={index} style={{
+                opacity: medicationAnims[index],
+                transform: [{
+                    translateY: medicationAnims[index].interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [20, 0]
+                    })
+                }]
+            }}>
+              <View style={styles.medicationCard}>
+                <View style={[styles.statusIndicator, {backgroundColor: med.status === 'taken' ? '#22C55E' : med.status === 'missed' ? '#EF4444' : '#F59E0B'}]}>
+                    <FontAwesome5 name={med.status === 'taken' ? 'check' : med.status === 'missed' ? 'times' : 'clock'} size={16} color="#FFFFFF" />
+                </View>
+                <View style={styles.medicationInfo}>
+                  <Text style={styles.medicationName}>{med.name}</Text>
+                  <Text style={styles.medicationDosage}>{med.dosage}</Text>
+                </View>
+                <Text style={styles.medicationTime}>{med.time}</Text>
+              </View>
+            </Animated.View>
         ))}
 
       </ScrollView>
 
-      <TouchableOpacity style={styles.fab} onPress={() => router.push('/add-medicine')}>
-        <FontAwesome5 name="plus" size={24} color="#FFFFFF" />
+      <TouchableOpacity 
+        activeOpacity={1}
+        onPressIn={onPressInFab}
+        onPressOut={onPressOutFab}
+        onPress={() => router.push('/add-medicine')}
+        style={styles.fabContainer}
+      >
+        <Animated.View style={[styles.fab, {transform: [{scale: fabAnim}]}]}>
+            <FontAwesome5 name="plus" size={22} color="#FFFFFF" />
+        </Animated.View>
       </TouchableOpacity>
 
     </SafeAreaView>
@@ -86,7 +168,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',
@@ -94,53 +176,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 10,
+    paddingBottom: 40,
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
   },
-  headerTitle: {
-    fontSize: 28,
+  headerGreeting: {
+      fontSize: 16,
+      color: '#6C757D',
+      fontWeight: '500',
+  },
+  headerName: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1E293B',
+    color: '#212529',
   },
   profilePic: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
-  summaryCard: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 20,
-    padding: 20,
-    marginHorizontal: 20,
-    marginTop: 10,
+  statsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: cardPadding,
+      marginTop: -25,
   },
-  summaryText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+  statCard: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 18,
+      paddingVertical: 15,
+      paddingHorizontal: 10,
+      alignItems: 'center',
+      width: statCardWidth,
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
   },
-  summaryValue: {
-    color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginTop: 5,
+  statValue: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: '#3B82F6',
   },
-  progressBar: {
-    height: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 3,
-    marginTop: 15,
-  },
-  progress: {
-    width: '50%',
-    height: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 3,
+  statLabel: {
+      fontSize: 13,
+      color: '#495057',
+      marginTop: 6,
+      fontWeight: '500',
   },
   medicationSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: 30,
+    marginTop: 25,
+    marginBottom: 10,
   },
   sectionTitle: {
     fontSize: 20,
@@ -150,20 +247,28 @@ const styles = StyleSheet.create({
   seeAll: {
     color: '#3B82F6',
     fontSize: 16,
+    fontWeight: '600',
   },
   medicationCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 15,
+    borderRadius: 18,
+    padding: 18,
     marginHorizontal: 20,
     marginTop: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  statusIndicator: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
   },
   medicationInfo: {
     flex: 1,
@@ -177,23 +282,29 @@ const styles = StyleSheet.create({
   medicationDosage: {
     fontSize: 14,
     color: '#64748B',
-    marginTop: 2,
+    marginTop: 3,
   },
   medicationTime: {
     fontSize: 16,
     fontWeight: '500',
     color: '#1E293B',
   },
-  fab: {
+  fabContainer: {
     position: 'absolute',
-    right: 30,
-    bottom: 30,
+    right: 25,
+    bottom: 25,
+  },
+  fab: {
     backgroundColor: '#3B82F6',
     width: 60,
     height: 60,
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
   },
 });

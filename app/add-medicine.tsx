@@ -5,95 +5,60 @@ import { useRouter } from 'expo-router';
 
 export default function AddMedicineScreen() {
   const router = useRouter();
-  const [isVoiceReminderEnabled, setIsVoiceReminderEnabled] = useState(false);
-  const toggleSwitch = () => setIsVoiceReminderEnabled(previousState => !previousState);
+  const [frequency, setFrequency] = useState('daily'); // daily, weekly, custom
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()}>
-                <FontAwesome5 name="arrow-left" size={24} color="#1E293B" />
+                <FontAwesome5 name="times" size={24} color="#343A40" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Add Medicine</Text>
+            <Text style={styles.headerTitle}>Add New Medicine</Text>
             <View style={{width: 24}}/>
         </View>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>Medicine Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., Paracetamol"
-            placeholderTextColor="#94A3B8"
-          />
-
-          <Text style={styles.label}>Dosage</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., 500mg"
-            placeholderTextColor="#94A3B8"
-          />
-
-          <Text style={styles.label}>Frequency</Text>
-          <View style={styles.chipContainer}>
-            <TouchableOpacity style={[styles.chip, styles.chipSelected]}>
-              <Text style={styles.chipTextSelected}>Once a Day</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.chip}>
-              <Text style={styles.chipText}>Twice a Day</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.chip}>
-              <Text style={styles.chipText}>Custom</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.label}>Time</Text>
-          <TouchableOpacity style={styles.timePicker}>
-            <FontAwesome5 name="clock" size={20} color="#3B82F6" />
-            <Text style={styles.timeText}>9:00 AM</Text>
-          </TouchableOpacity>
-
-          <View style={styles.durationContainer}>
-            <View style={{flex: 1}}>
-              <Text style={styles.label}>Start Date</Text>
-              <TouchableOpacity style={styles.datePicker}>
-                <Text style={styles.dateText}>Jan 1, 2024</Text>
-              </TouchableOpacity>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
+            <View style={styles.card}>
+                <Text style={styles.cardTitle}>Medicine Details</Text>
+                <TextInput style={styles.input} placeholder="Medicine Name" placeholderTextColor="#ADB5BD" />
+                <TextInput style={styles.input} placeholder="Dosage (e.g., 500mg)" placeholderTextColor="#ADB5BD" />
             </View>
-            <View style={{width: 20}}/>
-            <View style={{flex: 1}}>
-              <Text style={styles.label}>End Date</Text>
-              <TouchableOpacity style={styles.datePicker}>
-                <Text style={styles.dateText}>Jan 31, 2024</Text>
-              </TouchableOpacity>
+
+            <View style={styles.card}>
+                <Text style={styles.cardTitle}>Frequency</Text>
+                <View style={styles.chipContainer}>
+                    <TouchableOpacity 
+                        style={[styles.chip, frequency === 'daily' && styles.chipSelected]}
+                        onPress={() => setFrequency('daily')}> 
+                        <Text style={[styles.chipText, frequency === 'daily' && styles.chipTextSelected]}>Daily</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.chip, frequency === 'weekly' && styles.chipSelected]} 
+                        onPress={() => setFrequency('weekly')}>
+                        <Text style={[styles.chipText, frequency === 'weekly' && styles.chipTextSelected]}>Weekly</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.chip, frequency === 'custom' && styles.chipSelected]} 
+                        onPress={() => setFrequency('custom')}>
+                        <Text style={[styles.chipText, frequency === 'custom' && styles.chipTextSelected]}>Custom</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-          </View>
 
-          <Text style={styles.label}>Optional Notes</Text>
-          <TextInput
-            style={[styles.input, {height: 100}]}
-            placeholder="e.g., Take with food"
-            placeholderTextColor="#94A3B8"
-            multiline
-          />
+            <View style={styles.card}>
+                <Text style={styles.cardTitle}>Set Reminder</Text>
+                <TouchableOpacity style={styles.timeRow}>
+                    <FontAwesome5 name="clock" size={20} color="#495057" />
+                    <Text style={styles.timeText}>9:00 AM</Text>
+                    <FontAwesome5 name="chevron-right" size={16} color="#ADB5BD" />
+                </TouchableOpacity>
+            </View>
 
-          <View style={styles.reminderToggle}>
-            <Text style={styles.toggleLabel}>Enable Voice Reminder</Text>
-            <Switch
-              trackColor={{ false: "#767577", true: "#81b0ff" }}
-              thumbColor={isVoiceReminderEnabled ? "#3B82F6" : "#f4f3f4"}
-              ios_backgroundColor="#3e3e3e"
-              onValueChange={toggleSwitch}
-              value={isVoiceReminderEnabled}
-            />
-          </View>
-        </View>
+        </ScrollView>
 
-      </ScrollView>
-
-      <TouchableOpacity style={styles.fab} onPress={() => router.push('/home')}>
-        <FontAwesome5 name="check" size={24} color="#FFFFFF" />
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.saveButton} onPress={() => router.push('/(tabs)/home')}>
+            <Text style={styles.saveButtonText}>Save Medicine</Text>
+        </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -101,116 +66,93 @@ export default function AddMedicineScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E9ECEF'
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#1E293B',
+    color: '#212529',
   },
-  form: {
-    paddingHorizontal: 20,
+  card: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      marginHorizontal: 20,
+      marginTop: 20,
+      padding: 20,
+      elevation: 2,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#475569',
-    marginBottom: 8,
+  cardTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#343A40',
+      marginBottom: 15,
   },
   input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: '#F1F3F5',
+    borderRadius: 8,
     padding: 15,
     fontSize: 16,
-    color: '#1E293B',
-    marginBottom: 20,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
+    color: '#212529',
+    marginBottom: 15,
   },
   chipContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
+    justifyContent: 'space-between',
   },
   chip: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginRight: 10,
-    elevation: 1,
+    paddingHorizontal: 25,
+    borderWidth: 1,
+    borderColor: '#CED4DA',
   },
   chipSelected: {
     backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
   },
   chipText: {
-    color: '#3B82F6',
-    fontWeight: '600',
+    color: '#495057',
+    fontWeight: '500',
   },
   chipTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '600',
   },
-  timePicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
+  timeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#F1F3F5',
+      borderRadius: 8,
+      padding: 15,
   },
   timeText: {
-    fontSize: 16,
-    color: '#1E293B',
-    marginLeft: 15,
+      flex: 1,
+      fontSize: 16,
+      color: '#212529',
+      marginLeft: 15,
   },
-  durationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+  saveButton: {
+      position: 'absolute',
+      bottom: 20,
+      left: 20,
+      right: 20,
+      backgroundColor: '#3B82F6',
+      borderRadius: 12,
+      padding: 18,
+      alignItems: 'center',
+      elevation: 3,
   },
-  datePicker: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-  },
-  dateText: {
-    fontSize: 16,
-    color: '#1E293B',
-  },
-  reminderToggle: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-  },
-  toggleLabel: {
-    fontSize: 16,
-    color: '#1E293B',
-  },
-  fab: {
-    position: 'absolute',
-    right: 30,
-    bottom: 30,
-    backgroundColor: '#22C55E', // Green for save
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
+  saveButtonText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
   },
 });

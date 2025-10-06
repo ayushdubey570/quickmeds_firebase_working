@@ -1,50 +1,65 @@
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Switch } from "react-native";
+import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Switch, Image, ScrollView } from "react-native";
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useState } from "react";
 
 export default function SettingsScreen() {
+    const [isNotifications, setIsNotifications] = useState(true);
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const [isVoicePrompts, setIsVoicePrompts] = useState(true);
 
+    const toggleNotifications = () => setIsNotifications(previousState => !previousState);
     const toggleDarkMode = () => setIsDarkMode(previousState => !previousState);
-    const toggleVoicePrompts = () => setIsVoicePrompts(previousState => !previousState);
 
   return (
     <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-            <Text style={styles.headerTitle}>Settings</Text>
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.profileSection}>
+                <Image 
+                    source={{uri: 'https://i.imgur.com/8i2j8zL.png'}}
+                    style={styles.profileImage}
+                />
+                <Text style={styles.profileName}>Ayush Kumar</Text>
+                <Text style={styles.profileEmail}>ayush.kumar@example.com</Text>
+            </View>
 
-        <View style={styles.settingItem}>
-            <Text style={styles.settingLabel}>Dark Mode</Text>
-            <Switch
-                trackColor={{ false: "#767577", true: "#81b0ff" }}
-                thumbColor={isDarkMode ? "#3B82F6" : "#f4f3f4"}
-                onValueChange={toggleDarkMode}
-                value={isDarkMode}
-            />
-        </View>
+            <View style={styles.settingsSection}>
+                <Text style={styles.sectionTitle}>Preferences</Text>
+                <View style={styles.settingRow}>
+                    <FontAwesome5 name="bell" size={20} color="#495057" />
+                    <Text style={styles.settingLabel}>Notifications</Text>
+                    <Switch
+                        trackColor={{ false: "#CED4DA", true: "#81b0ff" }}
+                        thumbColor={isNotifications ? "#3B82F6" : "#f4f3f4"}
+                        onValueChange={toggleNotifications}
+                        value={isNotifications}
+                    />
+                </View>
+                <View style={styles.settingRow}>
+                    <FontAwesome5 name="moon" size={20} color="#495057" />
+                    <Text style={styles.settingLabel}>Dark Mode</Text>
+                    <Switch
+                        trackColor={{ false: "#CED4DA", true: "#81b0ff" }}
+                        thumbColor={isDarkMode ? "#3B82F6" : "#f4f3f4"}
+                        onValueChange={toggleDarkMode}
+                        value={isDarkMode}
+                    />
+                </View>
+            </View>
 
-        <View style={styles.settingItem}>
-            <Text style={styles.settingLabel}>Voice Prompts</Text>
-            <Switch
-                trackColor={{ false: "#767577", true: "#81b0ff" }}
-                thumbColor={isVoicePrompts ? "#3B82F6" : "#f4f3f4"}
-                onValueChange={toggleVoicePrompts}
-                value={isVoicePrompts}
-            />
-        </View>
+            <View style={styles.settingsSection}>
+                <Text style={styles.sectionTitle}>Support</Text>
+                <TouchableOpacity style={styles.settingRow}>
+                    <FontAwesome5 name="question-circle" size={20} color="#495057" />
+                    <Text style={styles.settingLabel}>Help & Feedback</Text>
+                    <FontAwesome5 name="chevron-right" size={16} color="#ADB5BD" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.settingRow}>
+                    <FontAwesome5 name="info-circle" size={20} color="#495057" />
+                    <Text style={styles.settingLabel}>About Us</Text>
+                    <FontAwesome5 name="chevron-right" size={16} color="#ADB5BD" />
+                </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity style={styles.settingItem}>
-            <Text style={styles.settingLabel}>Reset Data</Text>
-            <FontAwesome5 name="trash-alt" size={22} color="#EF4444" />
-        </TouchableOpacity>
-
-        <View style={styles.appInfo}>
-            <Text style={styles.appName}>QuickMeds</Text>
-            <Text style={styles.appVersion}>Version 1.0.0</Text>
-        </View>
-
+        </ScrollView>
     </SafeAreaView>
   );
 }
@@ -52,48 +67,52 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#F8F9FA',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1E293B',
-  },
-  settingItem: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 10,
-      padding: 20,
-      marginHorizontal: 20,
-      marginTop: 15,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+  profileSection: {
       alignItems: 'center',
-      elevation: 2,
+      paddingVertical: 30,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E9ECEF'
+  },
+  profileImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      marginBottom: 15,
+  },
+  profileName: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: '#212529'
+  },
+  profileEmail: {
+      fontSize: 16,
+      color: '#6C757D',
+  },
+  settingsSection: {
+      marginTop: 20,
+  },
+  sectionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#6C757D',
+      paddingHorizontal: 20,
+      marginBottom: 10,
+  },
+  settingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF',
+      paddingVertical: 15,
+      paddingHorizontal: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E9ECEF'
   },
   settingLabel: {
+      flex: 1,
       fontSize: 18,
-      color: '#1E293B',
-  },
-  appInfo: {
-      marginTop: 40,
-      alignItems: 'center',
-  },
-  appName: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: '#1E3A8A',
-  },
-  appVersion: {
-      fontSize: 16,
-      color: '#6B7280',
-      marginTop: 5,
+      color: '#343A40',
+      marginLeft: 15,
   }
 });
