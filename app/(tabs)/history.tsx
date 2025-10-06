@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, FlatList } from "react-native";
+import { StyleSheet, Text, View, SafeAreaView, FlatList } from "react-native";
 import { FontAwesome5 } from '@expo/vector-icons';
+import Header from "@/components/Header";
 
 const historyData = [
   { date: '2024-05-20', day: 'Monday', medications: [
@@ -35,15 +36,13 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-       <View style={styles.header}>
-            <Text style={styles.headerTitle}>Medication History</Text>
-        </View>
+        <Header title="Medication History" />
         <FlatList
             data={historyData}
             renderItem={renderItem}
             keyExtractor={item => item.date}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{paddingBottom: 20}}
+            contentContainerStyle={{paddingTop: 20, paddingBottom: 20}}
         />
     </SafeAreaView>
   );
@@ -52,20 +51,7 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F8',
-  },
-  header: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1E293B',
+    backgroundColor: '#F8F9FA',
   },
   dayContainer: {
       marginVertical: 10,
@@ -86,6 +72,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   medicationInfo: {
       flex: 1,

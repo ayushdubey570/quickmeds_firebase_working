@@ -1,23 +1,60 @@
 import { Tabs } from "expo-router";
-import { FontAwesome5 } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
+import { View, TouchableOpacity } from 'react-native';
+
+const CustomTabBarButton = ({ children, onPress }) => (
+    <TouchableOpacity
+        style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            transform: [{ translateY: -35 }],
+        }}
+        onPress={onPress}
+    >
+        <View style={{
+            width: 70,
+            height: 70,
+            borderRadius: 35,
+            backgroundColor: '#4c669f',
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: '#4c669f',
+            shadowOffset: { width: 0, height: 5 },
+            shadowOpacity: 0.3,
+            shadowRadius: 5,
+            elevation: 10,
+        }}>
+            {children}
+        </View>
+    </TouchableOpacity>
+);
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#3B82F6',
+        tabBarActiveTintColor: '#D66E5A',
         tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
-            backgroundColor: '#FFFFFF',
-            borderTopWidth: 0,
-            elevation: 5,
+            position: 'absolute',
+            bottom: 20,
+            left: 25,
+            right: 25,
+            elevation: 0,
+            backgroundColor: '#ffffff',
+            borderRadius: 30,
+            height: 70,
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            height: 60,
-            paddingBottom: 5,
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.5,
+            borderTopWidth: 0,
+        },
+        tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '600',
+            marginBottom: 5,
         }
       }}>
       <Tabs.Screen
@@ -25,7 +62,7 @@ export default function TabsLayout() {
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="home" size={size} color={color} />
+            <Feather name="home" size={size} color={color} />
           ),
         }}
       />
@@ -34,16 +71,28 @@ export default function TabsLayout() {
         options={{
           tabBarLabel: 'History',
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="history" size={size} color={color} />
+            <Feather name="clock" size={size} color={color} />
           ),
         }}
       />
+      <Tabs.Screen
+        name="add-medicine"
+        options={{
+            tabBarLabel: '',
+            tabBarIcon: () => (
+                <Feather name="plus" size={28} color="#FFFFFF" />
+            ),
+            tabBarButton: (props) => (
+                <CustomTabBarButton {...props} />
+            ),
+        }}
+       />
         <Tabs.Screen
             name="reports"
             options={{
                 tabBarLabel: 'Reports',
                 tabBarIcon: ({ color, size }) => (
-                    <FontAwesome5 name="chart-bar" size={size} color={color} />
+                    <Feather name="bar-chart-2" size={size} color={color} />
                 ),
             }}
         />
@@ -52,7 +101,7 @@ export default function TabsLayout() {
         options={{
           tabBarLabel: 'Settings',
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="cog" size={size} color={color} />
+            <Feather name="settings" size={size} color={color} />
           ),
         }}
       />

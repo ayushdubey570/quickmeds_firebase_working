@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Switch, Image, ScrollView } from "react-native";
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useState } from "react";
+import Header from "@/components/Header";
 
 export default function SettingsScreen() {
     const [isNotifications, setIsNotifications] = useState(true);
@@ -11,7 +12,8 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <Header title="Settings" />
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 20}}>
             <View style={styles.profileSection}>
                 <Image 
                     source={{uri: 'https://i.imgur.com/8i2j8zL.png'}}
@@ -27,8 +29,8 @@ export default function SettingsScreen() {
                     <FontAwesome5 name="bell" size={20} color="#495057" />
                     <Text style={styles.settingLabel}>Notifications</Text>
                     <Switch
-                        trackColor={{ false: "#CED4DA", true: "#81b0ff" }}
-                        thumbColor={isNotifications ? "#3B82F6" : "#f4f3f4"}
+                        trackColor={{ false: "#CED4DA", true: "#a8c4ff" }}
+                        thumbColor={isNotifications ? "#4c669f" : "#f4f3f4"}
                         onValueChange={toggleNotifications}
                         value={isNotifications}
                     />
@@ -37,8 +39,8 @@ export default function SettingsScreen() {
                     <FontAwesome5 name="moon" size={20} color="#495057" />
                     <Text style={styles.settingLabel}>Dark Mode</Text>
                     <Switch
-                        trackColor={{ false: "#CED4DA", true: "#81b0ff" }}
-                        thumbColor={isDarkMode ? "#3B82F6" : "#f4f3f4"}
+                        trackColor={{ false: "#CED4DA", true: "#a8c4ff" }}
+                        thumbColor={isDarkMode ? "#4c669f" : "#f4f3f4"}
                         onValueChange={toggleDarkMode}
                         value={isDarkMode}
                     />
@@ -72,6 +74,7 @@ const styles = StyleSheet.create({
   profileSection: {
       alignItems: 'center',
       paddingVertical: 30,
+      marginHorizontal: 20,
       borderBottomWidth: 1,
       borderBottomColor: '#E9ECEF'
   },
@@ -80,18 +83,21 @@ const styles = StyleSheet.create({
       height: 100,
       borderRadius: 50,
       marginBottom: 15,
+      borderWidth: 3,
+      borderColor: '#4c669f'
   },
   profileName: {
-      fontSize: 22,
+      fontSize: 24,
       fontWeight: 'bold',
       color: '#212529'
   },
   profileEmail: {
       fontSize: 16,
       color: '#6C757D',
+      marginTop: 4
   },
   settingsSection: {
-      marginTop: 20,
+      marginTop: 25,
   },
   sectionTitle: {
       fontSize: 16,
@@ -106,13 +112,14 @@ const styles = StyleSheet.create({
       backgroundColor: '#FFFFFF',
       paddingVertical: 15,
       paddingHorizontal: 20,
+      borderTopWidth: 1,
       borderBottomWidth: 1,
-      borderBottomColor: '#E9ECEF'
+      borderColor: '#E9ECEF'
   },
   settingLabel: {
       flex: 1,
       fontSize: 18,
       color: '#343A40',
-      marginLeft: 15,
+      marginLeft: 20,
   }
 });

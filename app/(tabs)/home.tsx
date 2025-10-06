@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, SafeAreaView, Animated, Dimensions } from "react-native";
-import { FontAwesome5 } from '@expo/vector-icons';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Animated, Dimensions, Modal } from "react-native";
+import { Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import Header from '@/components/Header';
 
 const medications = [
   {
@@ -31,14 +32,15 @@ const medications = [
 ];
 
 const { width } = Dimensions.get('window');
-const cardPadding = 20;
+const cardPadding = 25;
 const statCardWidth = (width - cardPadding * 4) / 3;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedMed, setSelectedMed] = useState(null);
   const statsAnim = useRef(new Animated.Value(0)).current;
   const medicationAnims = useRef(medications.map(() => new Animated.Value(0))).current;
-  const fabAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.timing(statsAnim, {
@@ -57,6 +59,11 @@ export default function HomeScreen() {
     Animated.stagger(100, animations).start();
   }, []);
 
+  const openModal = (med) => {
+      setSelectedMed(med);
+      setModalVisible(true);
+  }
+
   const statCardAnimationStyle = {
       opacity: statsAnim,
       transform: [
@@ -69,47 +76,20 @@ export default function HomeScreen() {
       ],
   };
 
-  const onPressInFab = () => {
-    Animated.spring(fabAnim, {
-        toValue: 0.95,
-        useNativeDriver: true,
-    }).start();
-  };
-
-  const onPressOutFab = () => {
-    Animated.spring(fabAnim, {
-        toValue: 1,
-        friction: 3,
-        tension: 40,
-        useNativeDriver: true,
-    }).start();
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-            <View>
-                <Text style={styles.headerGreeting}>Hello,</Text>
-                <Text style={styles.headerName}>Ayush Kumar</Text>
-            </View>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/settings')}>
-                <Image
-                source={{ uri: "https://i.imgur.com/8i2j8zL.png" }}
-                style={styles.profilePic}
-                />
-            </TouchableOpacity>
-        </View>
+        <Header title="Hello, Ayush" showProfile={true} />
 
         <View style={styles.statsContainer}>
-            <Animated.View style={[styles.statCard, statCardAnimationStyle]}>
+            <Animated.View style={[styles.statCard, styles.statCard1, statCardAnimationStyle]}>
                 <Text style={styles.statValue}>10</Text>
                 <Text style={styles.statLabel}>Taken</Text>
             </Animated.View>
-            <Animated.View style={[styles.statCard, statCardAnimationStyle, {transitionDelay: '100ms'}]}>
+            <Animated.View style={[styles.statCard, styles.statCard2, statCardAnimationStyle, {transitionDelay: '100ms'}]}>
                 <Text style={styles.statValue}>2</Text>
                 <Text style={styles.statLabel}>Missed</Text>
             </Animated.View>
-            <Animated.View style={[styles.statCard, statCardAnimationStyle, {transitionDelay: '200ms'}]}>
+            <Animated.View style={[styles.statCard, styles.statCard3, statCardAnimationStyle, {transitionDelay: '200ms'}]}>
                 <Text style={styles.statValue}>3</Text>
                 <Text style={styles.statLabel}>Pending</Text>
             </Animated.View>
@@ -119,7 +99,7 @@ export default function HomeScreen() {
 
         <View style={styles.medicationSection}>
           <Text style={styles.sectionTitle}>Today's Medicines</Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/history')}>
+          <TouchableOpacity onPress={() => router.push('/history')}>
             <Text style={styles.seeAll}>See All</Text>
           </TouchableOpacity>
         </View>
@@ -134,32 +114,61 @@ export default function HomeScreen() {
                     })
                 }]
             }}>
-              <View style={styles.medicationCard}>
-                <View style={[styles.statusIndicator, {backgroundColor: med.status === 'taken' ? '#22C55E' : med.status === 'missed' ? '#EF4444' : '#F59E0B'}]}>
-                    <FontAwesome5 name={med.status === 'taken' ? 'check' : med.status === 'missed' ? 'times' : 'clock'} size={16} color="#FFFFFF" />
-                </View>
-                <View style={styles.medicationInfo}>
-                  <Text style={styles.medicationName}>{med.name}</Text>
-                  <Text style={styles.medicationDosage}>{med.dosage}</Text>
-                </View>
-                <Text style={styles.medicationTime}>{med.time}</Text>
-              </View>
+                <TouchableOpacity onPress={() => openModal(med)}>
+                  <View style={styles.medicationCard}>
+                    <View style={[styles.statusIndicator, {backgroundColor: med.status === 'taken' ? '#22C55E' : med.status === 'missed' ? '#EF4444' : '#F59E0B'}]}>
+                        <FontAwesome5 name={med.status === 'taken' ? 'check' : med.status === 'missed' ? 'times' : 'clock'} size={16} color="#FFFFFF" />
+                    </View>
+                    <View style={styles.medicationInfo}>
+                      <Text style={styles.medicationName}>{med.name}</Text>
+                      <Text style={styles.medicationDosage}>{med.dosage}</Text>
+                    </View>
+                    <Text style={styles.medicationTime}>{med.time}</Text>
+                  </View>
+                </TouchableOpacity>
             </Animated.View>
         ))}
 
       </ScrollView>
 
-      <TouchableOpacity 
-        activeOpacity={1}
-        onPressIn={onPressInFab}
-        onPressOut={onPressOutFab}
-        onPress={() => router.push('/add-medicine')}
-        style={styles.fabContainer}
-      >
-        <Animated.View style={[styles.fab, {transform: [{scale: fabAnim}]}]}>
-            <FontAwesome5 name="plus" size={22} color="#FFFFFF" />
-        </Animated.View>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.floatingButton} onPress={() => router.push('/add-medicine')}>
+            <Feather name="plus" size={30} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+                setModalVisible(!modalVisible);
+            }}
+        >
+            <View style={styles.centeredView}>
+                <View style={styles.modalView}>
+                    <Text style={styles.modalText}>{selectedMed?.name}</Text>
+                    <View style={styles.modalButtons}>
+                        <TouchableOpacity style={[styles.modalButton, {backgroundColor: '#22C55E'}]} onPress={() => setModalVisible(false)}>
+                            <Feather name="check" size={24} color="#FFFFFF" />
+                            <Text style={styles.modalButtonText}>Taken</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.modalButton, {backgroundColor: '#EF4444'}]} onPress={() => setModalVisible(false)}>
+                            <Feather name="x" size={24} color="#FFFFFF" />
+                            <Text style={styles.modalButtonText}>Missed</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.modalButton, {backgroundColor: '#F59E0B'}]} onPress={() => setModalVisible(false)}>
+                            <Feather name="clock" size={24} color="#FFFFFF" />
+                            <Text style={styles.modalButtonText}>Take Later</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={() => setModalVisible(!modalVisible)}
+                    >
+                        <Text style={styles.textStyle}>Close</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
 
     </SafeAreaView>
   );
@@ -170,37 +179,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 40,
-    backgroundColor: '#FFFFFF',
-    borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-  headerGreeting: {
-      fontSize: 16,
-      color: '#6C757D',
-      fontWeight: '500',
-  },
-  headerName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#212529',
-  },
-  profilePic: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-  },
   statsContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -208,28 +186,36 @@ const styles = StyleSheet.create({
       marginTop: -25,
   },
   statCard: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 18,
-      paddingVertical: 15,
+      borderRadius: 20,
+      paddingVertical: 20,
       paddingHorizontal: 10,
       alignItems: 'center',
       width: statCardWidth,
-      elevation: 6,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 10
+  },
+  statCard1: {
+      backgroundColor: '#FFDDC1',
+  },
+  statCard2: {
+      backgroundColor: '#C2E9FB',
+  },
+  statCard3: {
+      backgroundColor: '#D4FFEA',
   },
   statValue: {
-      fontSize: 22,
+      fontSize: 28,
       fontWeight: 'bold',
-      color: '#3B82F6',
+      color: '#333333',
   },
   statLabel: {
-      fontSize: 13,
-      color: '#495057',
+      fontSize: 14,
+      color: '#555555',
       marginTop: 6,
-      fontWeight: '500',
+      fontWeight: '600',
   },
   medicationSection: {
     flexDirection: 'row',
@@ -240,14 +226,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#1E293B',
   },
   seeAll: {
-    color: '#3B82F6',
+    color: '#4c669f',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   medicationCard: {
     backgroundColor: '#FFFFFF',
@@ -257,10 +243,10 @@ const styles = StyleSheet.create({
     marginTop: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 3,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
   },
   statusIndicator: {
@@ -289,22 +275,73 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1E293B',
   },
-  fabContainer: {
-    position: 'absolute',
-    right: 25,
-    bottom: 25,
+    floatingButton: {
+        position: 'absolute',
+        bottom: 90,
+        right: 20,
+        backgroundColor: '#4c669f',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#4c669f',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 10,
+    },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  fab: {
-    backgroundColor: '#3B82F6',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
     shadowOpacity: 0.25,
-    shadowRadius: 6,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  modalButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      width: '100%',
+  },
+  modalButton: {
+      borderRadius: 10,
+      padding: 10,
+      elevation: 2,
+      flexDirection: 'row',
+      alignItems: 'center',
+  },
+    modalButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginLeft: 10,
+    },
+  closeButton: {
+      marginTop: 20,
+  },
+  textStyle: {
+      color: '#4c669f',
+      fontWeight: 'bold',
+      textAlign: 'center',
   },
 });

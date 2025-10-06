@@ -1,158 +1,195 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Switch, ScrollView, SafeAreaView } from "react-native";
+
+import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, Switch, Animated } from "react-native";
 import { FontAwesome5 } from '@expo/vector-icons';
-import { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "expo-router";
 
 export default function AddMedicineScreen() {
-  const router = useRouter();
-  const [frequency, setFrequency] = useState('daily'); // daily, weekly, custom
+    const router = useRouter();
+    const [medicineName, setMedicineName] = useState("");
+    const [dosage, setDosage] = useState("");
+    const [time, setTime] = useState("");
+    const [isDaily, setIsDaily] = useState(true);
 
-  return (
-    <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()}>
-                <FontAwesome5 name="times" size={24} color="#343A40" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Add New Medicine</Text>
-            <View style={{width: 24}}/>
-        </View>
+    const isFormValid = medicineName.trim() !== '' && dosage.trim() !== '' && time.trim() !== '';
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
-            <View style={styles.card}>
-                <Text style={styles.cardTitle}>Medicine Details</Text>
-                <TextInput style={styles.input} placeholder="Medicine Name" placeholderTextColor="#ADB5BD" />
-                <TextInput style={styles.input} placeholder="Dosage (e.g., 500mg)" placeholderTextColor="#ADB5BD" />
+    const anim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(anim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+        }).start();
+    }, []);
+
+    const formRowStyle = (delay) => ({
+        opacity: anim,
+        transform: [
+            {
+                translateY: anim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [50, 0]
+                })
+            }
+        ],
+        transitionDelay: `${delay}ms`
+    });
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <FontAwesome5 name="arrow-left" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Add New Medicine</Text>
             </View>
 
-            <View style={styles.card}>
-                <Text style={styles.cardTitle}>Frequency</Text>
-                <View style={styles.chipContainer}>
-                    <TouchableOpacity 
-                        style={[styles.chip, frequency === 'daily' && styles.chipSelected]}
-                        onPress={() => setFrequency('daily')}> 
-                        <Text style={[styles.chipText, frequency === 'daily' && styles.chipTextSelected]}>Daily</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={[styles.chip, frequency === 'weekly' && styles.chipSelected]} 
-                        onPress={() => setFrequency('weekly')}>
-                        <Text style={[styles.chipText, frequency === 'weekly' && styles.chipTextSelected]}>Weekly</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={[styles.chip, frequency === 'custom' && styles.chipSelected]} 
-                        onPress={() => setFrequency('custom')}>
-                        <Text style={[styles.chipText, frequency === 'custom' && styles.chipTextSelected]}>Custom</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+            <View style={styles.formContainer}>
+                <Animated.View style={formRowStyle(0)}>
+                    <View style={styles.inputRow}>
+                        <FontAwesome5 name="pills" size={20} color="#ADB5BD" style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Medicine Name"
+                            value={medicineName}
+                            onChangeText={setMedicineName}
+                            placeholderTextColor="#ADB5BD"
+                        />
+                    </View>
+                </Animated.View>
 
-            <View style={styles.card}>
-                <Text style={styles.cardTitle}>Set Reminder</Text>
-                <TouchableOpacity style={styles.timeRow}>
-                    <FontAwesome5 name="clock" size={20} color="#495057" />
-                    <Text style={styles.timeText}>9:00 AM</Text>
-                    <FontAwesome5 name="chevron-right" size={16} color="#ADB5BD" />
+                <Animated.View style={formRowStyle(100)}>
+                    <View style={styles.inputRow}>
+                        <FontAwesome5 name="prescription-bottle" size={20} color="#ADB5BD" style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Dosage (e.g., 500mg)"
+                            value={dosage}
+                            onChangeText={setDosage}
+                            placeholderTextColor="#ADB5BD"
+                        />
+                    </View>
+                </Animated.View>
+
+                <Animated.View style={formRowStyle(200)}>
+                    <View style={styles.inputRow}>
+                        <FontAwesome5 name="clock" size={20} color="#ADB5BD" style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Time (e.g., 8:00 AM)"
+                            value={time}
+                            onChangeText={setTime}
+                            placeholderTextColor="#ADB5BD"
+                        />
+                    </View>
+                </Animated.View>
+
+                <Animated.View style={formRowStyle(300)}>
+                    <View style={styles.switchRow}>
+                        <Text style={styles.switchLabel}>Take Daily</Text>
+                        <Switch
+                            value={isDaily}
+                            onValueChange={setIsDaily}
+                            trackColor={{ false: "#CED4DA", true: "#a8c4ff" }}
+                            thumbColor={isDaily ? "#4c669f" : "#f4f3f4"}
+                        />
+                    </View>
+                </Animated.View>
+
+                <TouchableOpacity 
+                    style={[styles.addButton, {backgroundColor: isFormValid ? '#4c669f' : '#a8c4ff'}]}
+                    disabled={!isFormValid}
+                    onPress={() => { /* Handle adding medicine logic */ }}
+                >
+                    <Text style={styles.addButtonText}>Add Medicine</Text>
                 </TouchableOpacity>
             </View>
-
-        </ScrollView>
-
-        <TouchableOpacity style={styles.saveButton} onPress={() => router.push('/(tabs)/home')}>
-            <Text style={styles.saveButtonText}>Save Medicine</Text>
-        </TouchableOpacity>
-    </SafeAreaView>
-  );
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF'
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#212529',
-  },
-  card: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12,
-      marginHorizontal: 20,
-      marginTop: 20,
-      padding: 20,
-      elevation: 2,
-  },
-  cardTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#343A40',
-      marginBottom: 15,
-  },
-  input: {
-    backgroundColor: '#F1F3F5',
-    borderRadius: 8,
-    padding: 15,
-    fontSize: 16,
-    color: '#212529',
-    marginBottom: 15,
-  },
-  chipContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  chip: {
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 25,
-    borderWidth: 1,
-    borderColor: '#CED4DA',
-  },
-  chipSelected: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
-  },
-  chipText: {
-    color: '#495057',
-    fontWeight: '500',
-  },
-  chipTextSelected: {
-    color: '#FFFFFF',
-  },
-  timeRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#F1F3F5',
-      borderRadius: 8,
-      padding: 15,
-  },
-  timeText: {
-      flex: 1,
-      fontSize: 16,
-      color: '#212529',
-      marginLeft: 15,
-  },
-  saveButton: {
-      position: 'absolute',
-      bottom: 20,
-      left: 20,
-      right: 20,
-      backgroundColor: '#3B82F6',
-      borderRadius: 12,
-      padding: 18,
-      alignItems: 'center',
-      elevation: 3,
-  },
-  saveButtonText: {
-      color: '#FFFFFF',
-      fontSize: 18,
-      fontWeight: 'bold',
-  },
+    container: {
+        flex: 1,
+        backgroundColor: '#F8F9FA',
+    },
+    header: {
+        backgroundColor: '#4c669f',
+        paddingTop: 60,
+        paddingBottom: 20,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+    },
+    backButton: {
+        marginRight: 20,
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    formContainer: {
+        padding: 30,
+        flex: 1,
+    },
+    inputRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 15,
+        marginBottom: 20,
+        paddingHorizontal: 15,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    inputIcon: {
+        marginRight: 15,
+    },
+    input: {
+        flex: 1,
+        height: 55,
+        fontSize: 16,
+        color: '#343A40',
+    },
+    switchRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 15,
+        padding: 15,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    switchLabel: {
+        fontSize: 18,
+        color: '#495057',
+        fontWeight: '500',
+    },
+    addButton: {
+        borderRadius: 15,
+        padding: 18,
+        alignItems: 'center',
+        marginTop: 30,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+    },
+    addButtonText: {
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
 });
