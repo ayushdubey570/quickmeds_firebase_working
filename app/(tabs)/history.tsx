@@ -173,14 +173,14 @@ const HistoryScreen = () => {
           />
         </View>
         <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.toolButton} onPress={() => setFilterModalVisible(true)}>
+            <Feather name="filter" size={22} color="#4c669f" />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.toolButton} onPress={() => setInfoModalVisible(true)}>
               <Feather name="help-circle" size={22} color="#4c669f" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.toolButton} onPress={handleDeleteAll}>
               <Feather name="trash-2" size={22} color="#EF4444" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolButton} onPress={() => setFilterModalVisible(true)}>
-            <Feather name="filter" size={22} color="#4c669f" />
           </TouchableOpacity>
         </View>
       </View>
