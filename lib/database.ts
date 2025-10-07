@@ -17,9 +17,10 @@ const init = () => {
       );
     `);
 
-    // Create the history table if it doesn't exist
+    // Drop the history table to ensure schema is updated, then recreate it
+    db.execSync(`DROP TABLE IF EXISTS history;`);
     db.execSync(`
-      CREATE TABLE IF NOT EXISTS history (
+      CREATE TABLE history (
         id INTEGER PRIMARY KEY NOT NULL,
         medicine_id INTEGER NOT NULL,
         status TEXT NOT NULL,
