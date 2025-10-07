@@ -212,7 +212,7 @@ export default function HomeScreen() {
                     source={require('../../assets/images/texture.png')} 
                     style={styles.modalView}
                     resizeMode="cover"
-                    imageStyle={{ borderRadius: 20 }}
+                    imageStyle={styles.modalBgImage}
                 >
                     <Text style={styles.modalText}>{selectedMed?.name}</Text>
                     <Text style={styles.modalSubText}>{selectedMed?.dosage} - {selectedMed?.time}</Text>
@@ -370,6 +370,15 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 30,
         alignItems: "center",
+        overflow: 'hidden',
+    },
+    modalBgImage: {
+        borderRadius: 20,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
     },
     modalText: {
         fontSize: 22,
