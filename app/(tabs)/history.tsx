@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     paddingVertical: 12,
     borderRadius: 12,
-    alignItems: 'center
+    alignItems: 'center',
     flex: 1,
     marginRight: 10,
   },
