@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Animated, Dimensions, Modal, Alert, ImageBackground } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Animated, Dimensions, Modal, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -8,13 +8,35 @@ import { getDashboardStats, getTodaysMedicinesWithStatus, updateHistoryEvent } f
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.9;
+const SPACING = (width - CARD_WIDTH) / 2;
 
 const healthQuotes = [
-  "The greatest wealth is health.",
-  "A healthy outside starts from the inside.",
-  "To keep the body in good health is a duty, otherwise we shall not be able to keep our mind strong and clear.",
-  "He who has health has hope; and he who has hope, has everything.",
-  "Take care of your body. It’s the only place you have to live."
+    {
+        quote: "The greatest wealth is health.",
+        icon: "activity",
+        color: "#4A90E2",
+    },
+    {
+        quote: "A healthy outside starts from the inside.",
+        icon: "heart",
+        color: "#D0021B",
+    },
+    {
+        quote: "To keep the body in good health is a duty...",
+        icon: "book-open",
+        color: "#F5A623",
+    },
+    {
+        quote: "He who has health has hope; and he who has hope, has everything.",
+        icon: "sun",
+        color: "#7ED321",
+    },
+    {
+        quote: "Take care of your body. It’s the only place you have to live.",
+        icon: "home",
+        color: "#BD10E0",
+    },
 ];
 
 const getStatusStyle = (status) => {
@@ -37,38 +59,12 @@ export default function HomeScreen() {
   const [medicines, setMedicines] = useState([]);
   const [stats, setStats] = useState({ taken: 0, missed: 0, pending: 0 });
   const [userName, setUserName] = useState('User');
-  const [quoteIndex, setQuoteIndex] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
 
   const animations = {
     stats: useRef(new Animated.Value(0)).current,
     list: useRef(new Animated.Value(0)).current,
   }
-
-  useEffect(() => {
-    const updateQuote = async () => {
-      const lastUpdated = await AsyncStorage.getItem('quoteLastUpdated');
-      const now = new Date();
-
-      if (lastUpdated) {
-        const lastUpdatedDate = new Date(lastUpdated);
-        const diffInHours = (now - lastUpdatedDate) / (1000 * 60 * 60);
-        if (diffInHours < 24) {
-          const storedQuoteIndex = await AsyncStorage.getItem('quoteIndex');
-          if (storedQuoteIndex) {
-            setQuoteIndex(parseInt(storedQuoteIndex, 10));
-          }
-          return;
-        }
-      }
-
-      const newIndex = Math.floor(Math.random() * healthQuotes.length);
-      setQuoteIndex(newIndex);
-      await AsyncStorage.setItem('quoteIndex', newIndex.toString());
-      await AsyncStorage.setItem('quoteLastUpdated', now.toISOString());
-    };
-
-    updateQuote();
-  }, []);
 
   const loadData = useCallback(() => {
     try {
@@ -89,6 +85,8 @@ export default function HomeScreen() {
       };
       fetchUserName();
       loadData();
+      animations.stats.setValue(0);
+      animations.list.setValue(0);
       Animated.parallel([
         Animated.timing(animations.stats, {
           toValue: 1,
@@ -98,7 +96,7 @@ export default function HomeScreen() {
         Animated.timing(animations.list, {
           toValue: 1,
           duration: 600,
-          delay: 200, // Stagger the animation
+          delay: 200,
           useNativeDriver: true,
         }),
       ]).start();
@@ -107,12 +105,11 @@ export default function HomeScreen() {
 
   const handleHistoryEvent = (status) => {
     if (!selectedMed) return;
-
     try {
       const today = new Date().toISOString().split('T')[0];
       updateHistoryEvent(selectedMed.id, selectedMed.name, status, today, selectedMed.time);
       setModalVisible(false);
-      loadData(); // Refresh data
+      loadData();
     } catch (error) {
       console.error(`Failed to mark as ${status}:`, error);
       Alert.alert("Error", `Could not mark as ${status}.`);
@@ -147,9 +144,41 @@ export default function HomeScreen() {
         <Header title={`Hello, ${userName}`} showProfile={true} name={userName} />
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
             
-            <View style={styles.quoteCarousel}>
-                <Feather name="heart" size={24} color="#D66E5A" />
-                <Text style={styles.quoteText}>{healthQuotes[quoteIndex]}</Text>
+            <View style={styles.carouselContainer}>
+                <Animated.ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                        { useNativeDriver: true }
+                    )}
+                    scrollEventThrottle={16}
+                    contentContainerStyle={{ paddingHorizontal: SPACING }}
+                    decelerationRate="fast"
+                    snapToInterval={CARD_WIDTH + 10}
+                >
+                    {healthQuotes.map((item, index) => {
+                        const inputRange = [
+                            (index - 1) * (CARD_WIDTH + 10),
+                            index * (CARD_WIDTH + 10),
+                            (index + 1) * (CARD_WIDTH + 10),
+                        ];
+                        const scale = scrollX.interpolate({
+                            inputRange,
+                            outputRange: [0.9, 1, 0.9],
+                            extrapolate: 'clamp',
+                        });
+                        return (
+                            <Animated.View style={[styles.quoteCard, { transform: [{ scale }] }]} key={index}>
+                                <View style={[styles.quoteIconContainer, { backgroundColor: item.color }]}>
+                                    <Feather name={item.icon} size={28} color="#FFFFFF" />
+                                </View>
+                                <Text style={styles.quoteText}>{item.quote}</Text>
+                            </Animated.View>
+                        );
+                    })}
+                </Animated.ScrollView>
             </View>
 
             <View style={styles.statsContainer}>
@@ -243,33 +272,52 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F0F4F8',
     },
-    quoteCarousel: {
+    carouselContainer: {
+        height: 160,
+        marginVertical: 15,
+    },
+    quoteCard: {
+        width: CARD_WIDTH,
+        height: 140,
         backgroundColor: '#FFFFFF',
         borderRadius: 20,
+        marginHorizontal: 5,
         padding: 20,
-        marginHorizontal: 20,
-        marginVertical: 15,
-        elevation: 3,
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        flexDirection: 'row',
+        shadowRadius: 8,
+    },
+    quoteIconContainer: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
         alignItems: 'center',
+        position: 'absolute',
+        top: -25,
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
     },
     quoteText: {
         fontSize: 15,
         fontStyle: 'italic',
         color: '#4A5568',
         textAlign: 'center',
-        flex: 1,
-        marginLeft: 15,
+        marginTop: 20,
     },
     statsContainer: {
         flexDirection: 'row',
         gap: 15,
         paddingHorizontal: 20,
         marginBottom: 20,
+        marginTop: 10,
     },
     statCard: {
         flex: 1,
