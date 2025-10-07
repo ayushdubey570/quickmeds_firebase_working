@@ -235,7 +235,7 @@ export const getAdherenceData = () => {
                 ? Math.round((takenMonth / (takenMonth + missedMonth)) * 100)
                 : 0;
             
-            monthlyLabels.push(monthDate.toLocaleDateString('en-US', { month: 'short' }));
+            monthlyLabels.push(monthDate.toLocaleString('en-US', { month: 'short' }));
             monthlyData.push(monthAdherence);
         }
 
@@ -260,5 +260,14 @@ export const getAdherenceData = () => {
             overallAdherence: 0,
             totalMedicines: 0,
         };
+    }
+};
+
+export const clearHistory = () => {
+    try {
+        return db.runSync('DELETE FROM history');
+    } catch (error) {
+        console.error('Failed to clear history', error);
+        throw error;
     }
 };

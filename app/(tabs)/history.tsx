@@ -1,16 +1,17 @@
-import { StyleSheet, Text, View, ScrollView, SafeAreaView, TouchableOpacity, Animated, TextInput, Modal } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, SafeAreaView, TouchableOpacity, Animated, TextInput, Modal, Alert } from 'react-native';
 import React, { useState, useRef, useCallback } from 'react';
 import Header from '@/components/Header';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import { fetchHistory } from '../../lib/database';
+import { fetchHistory, clearHistory } from '../../lib/database';
 
 const HistoryScreen = () => {
   const [history, setHistory] = useState({});
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [nameFilter, setNameFilter] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const loadHistory = useCallback(() => {
@@ -43,6 +44,29 @@ const HistoryScreen = () => {
     }, [loadHistory])
   );
 
+  const handleDeleteAll = () => {
+    Alert.alert(
+      "Delete History",
+      "Are you sure you want to delete all medication history? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive", 
+          onPress: () => {
+            try {
+              clearHistory();
+              loadHistory();
+              Alert.alert("Success", "Medication history has been cleared.");
+            } catch (error) {
+              Alert.alert("Error", "Failed to clear medication history.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const getStatusStyle = (status) => {
     switch (status) {
       case 'taken':
@@ -60,7 +84,7 @@ const HistoryScreen = () => {
     setStatusFilter('all');
     setDateFilter('all');
     setNameFilter('');
-    setModalVisible(false);
+    setFilterModalVisible(false);
   };
 
   const renderHistory = () => {
@@ -114,7 +138,7 @@ const HistoryScreen = () => {
                   </View>
                   <View style={styles.historyDetails}>
                     <Text style={styles.medicationName}>{item.name}</Text>
-                    <Text style={styles.medicationTime}>{`${item.frequency} at ${item.time}`}</Text>
+                    <Text style={styles.medicationTime}>{`at ${item.time}`}</Text>
                   </View>
                   <Text style={[styles.statusText, {color: statusStyle.color}]}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
                 </View>
@@ -137,6 +161,14 @@ const HistoryScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Medication History" />
+      <View style={styles.toolbar}>
+          <TouchableOpacity style={styles.toolButton} onPress={() => setInfoModalVisible(true)}>
+              <Feather name="help-circle" size={24} color="#4c669f" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolButton} onPress={handleDeleteAll}>
+              <Feather name="trash-2" size={24} color="#EF4444" />
+          </TouchableOpacity>
+      </View>
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrapper}>
           <Feather name="search" size={20} color="#9E9E9E" style={{marginLeft: 10}} />
@@ -148,7 +180,7 @@ const HistoryScreen = () => {
             placeholderTextColor="#9E9E9E"
           />
         </View>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => setModalVisible(true)}>
+        <TouchableOpacity style={styles.filterBtn} onPress={() => setFilterModalVisible(true)}>
           <Feather name="filter" size={22} color="#4c669f" />
         </TouchableOpacity>
       </View>
@@ -156,8 +188,8 @@ const HistoryScreen = () => {
       <Modal
         animationType="fade"
         transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        visible={filterModalVisible}
+        onRequestClose={() => setFilterModalVisible(false)}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -184,10 +216,28 @@ const HistoryScreen = () => {
               <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
                 <Text style={styles.clearButtonText}>Clear Filters</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.applyButton} onPress={() => setModalVisible(false)}>
+              <TouchableOpacity style={styles.applyButton} onPress={() => setFilterModalVisible(false)}>
                 <Text style={styles.applyButtonText}>Apply</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={infoModalVisible}
+        onRequestClose={() => setInfoModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Feather name="info" size={40} color="#4c669f" style={{alignSelf: 'center', marginBottom: 15}}/>
+            <Text style={styles.infoText}>
+              Even after deleting medicines from the \"Manage Your Medicine\" screen, they remain visible in the history. This is for your convenience in case you have deleted a medicine by mistake and need to reference its history.
+            </Text>
+            <TouchableOpacity style={styles.applyButton} onPress={() => setInfoModalVisible(false)}>
+                <Text style={styles.applyButtonText}>Got it!</Text>
+              </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -205,6 +255,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+  },
+  toolbar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0'
+  },
+  toolButton: {
+    paddingHorizontal: 10,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -299,7 +361,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     flex: 1,
-    marginLeft: 10,
   },
   applyButtonText: {
     color: '#FFFFFF',
@@ -373,5 +434,13 @@ const styles = StyleSheet.create({
     marginTop: 50,
     fontSize: 16,
     color: '#64748B',
+  },
+  infoText: {
+    fontSize: 16,
+    fontStyle: 'italic',
+    color: '#4A5568',
+    textAlign: 'center',
+    marginBottom: 25,
+    lineHeight: 24,
   },
 });

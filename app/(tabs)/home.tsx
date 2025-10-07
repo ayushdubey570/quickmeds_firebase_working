@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
         minHeight: 160,
         backgroundColor: '#FFFFFF',
         borderRadius: 20,
-        marginHorizontal: 5,
+        marginHorizontal: 3,
         padding: 25,
         paddingTop: 40,
         bottom: 5,
