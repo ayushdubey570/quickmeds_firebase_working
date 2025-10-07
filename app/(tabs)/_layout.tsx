@@ -37,7 +37,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
             position: 'absolute',
-            bottom: 20,
+            bottom: 15,
             left: 25,
             right: 25,
             elevation: 0,
@@ -53,7 +53,7 @@ export default function TabsLayout() {
         tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: '600',
-            marginBottom: 5,
+            marginBottom: 2,
         }
       }}>
       <Tabs.Screen

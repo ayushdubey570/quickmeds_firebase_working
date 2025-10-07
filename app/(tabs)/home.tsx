@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Animated, Dimensions, Modal, Alert } from "react-native";
-import { Feather, FontAwesome5 } from '@expo/vector-icons';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Animated, Dimensions, Modal, Alert, ImageBackground } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Feather } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Header from '@/components/Header';
@@ -7,8 +8,6 @@ import { getDashboardStats, getTodaysMedicinesWithStatus, updateHistoryEvent } f
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get('window');
-const cardPadding = 25;
-const statCardWidth = (width - cardPadding * 4) / 3;
 
 const healthQuotes = [
   "The greatest wealth is health.",
@@ -21,13 +20,13 @@ const healthQuotes = [
 const getStatusStyle = (status) => {
     switch (status) {
         case 'taken':
-            return { color: '#22C55E', icon: 'check' };
+            return { color: '#22C55E', icon: 'check-circle' };
         case 'missed':
-            return { color: '#EF4444', icon: 'times' };
+            return { color: '#EF4444', icon: 'x-circle' };
         case 'snoozed':
             return { color: '#F59E0B', icon: 'clock' };
         default:
-            return { color: '#64748B', icon: 'clock' }; // Pending
+            return { color: '#64748B', icon: 'help-circle' }; // Pending
     }
 };
 
@@ -37,25 +36,26 @@ export default function HomeScreen() {
   const [selectedMed, setSelectedMed] = useState(null);
   const [medicines, setMedicines] = useState([]);
   const [stats, setStats] = useState({ taken: 0, missed: 0, pending: 0 });
-  const statsAnim = useRef(new Animated.Value(0)).current;
-  const listAnim = useRef(new Animated.Value(0)).current;
   const [userName, setUserName] = useState('User');
   const [quoteIndex, setQuoteIndex] = useState(0);
+
+  const animations = {
+    stats: useRef(new Animated.Value(0)).current,
+    list: useRef(new Animated.Value(0)).current,
+  }
 
   useEffect(() => {
     const quoteInterval = setInterval(() => {
       setQuoteIndex((prevIndex) => (prevIndex + 1) % healthQuotes.length);
-    }, 5000);
+    }, 7000);
     return () => clearInterval(quoteInterval);
   }, []);
 
   const loadData = useCallback(() => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const todaysMedicines = getTodaysMedicinesWithStatus(today);
-      const todayStats = getDashboardStats(today);
-      setMedicines(todaysMedicines);
-      setStats(todayStats);
+      setMedicines(getTodaysMedicinesWithStatus(today));
+      setStats(getDashboardStats(today));
     } catch (error) {
       console.error("Failed to load data:", error);
       Alert.alert("Error", "Could not load data.");
@@ -70,22 +70,21 @@ export default function HomeScreen() {
       };
       fetchUserName();
       loadData();
-      listAnim.setValue(0);
-      Animated.timing(listAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
+      Animated.parallel([
+        Animated.timing(animations.stats, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animations.list, {
+          toValue: 1,
+          duration: 600,
+          delay: 200, // Stagger the animation
+          useNativeDriver: true,
+        }),
+      ]).start();
     }, [loadData])
   );
-
-  useEffect(() => {
-    Animated.timing(statsAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, []);
 
   const handleHistoryEvent = (status) => {
     if (!selectedMed) return;
@@ -94,7 +93,7 @@ export default function HomeScreen() {
       const today = new Date().toISOString().split('T')[0];
       updateHistoryEvent(selectedMed.id, status, today, selectedMed.time);
       setModalVisible(false);
-      loadData();
+      loadData(); // Refresh data
     } catch (error) {
       console.error(`Failed to mark as ${status}:`, error);
       Alert.alert("Error", `Could not mark as ${status}.`);
@@ -106,53 +105,52 @@ export default function HomeScreen() {
     setModalVisible(true);
   }
 
-  const statCardAnimationStyle = {
-    opacity: statsAnim,
-    transform: [
-        {
-            translateY: statsAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [50, 0],
-            })
-        },
-    ],
-  };
-
-  const listAnimationStyle = {
-    opacity: listAnim,
-    transform: [
-        {
-            translateY: listAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [30, 0],
-            })
-        },
-    ],
+  const animatedStyles = {
+    statCard: (index) => ({
+        opacity: animations.stats,
+        transform: [
+            {
+                translateY: animations.stats.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [50, 0],
+                })
+            },
+        ],
+        transitionDelay: `${index * 100}ms`,
+    }),
+    list: {
+        opacity: animations.list,
+    },
   };
 
   return (
     <SafeAreaView style={styles.container}>
         <Header title={`Hello, ${userName}`} showProfile={true} name={userName} />
-        <View style={styles.quoteCarousel}>
-          <Text style={styles.quoteText}>{healthQuotes[quoteIndex]}</Text>
-        </View>
-
-        <View style={styles.statsContainer}>
-            <Animated.View style={[styles.statCard, {backgroundColor: '#FFDDC1'}, statCardAnimationStyle]}>
-                <Text style={styles.statValue}>{stats.taken}</Text>
-                <Text style={styles.statLabel}>Taken</Text>
-            </Animated.View>
-            <Animated.View style={[styles.statCard, {backgroundColor: '#C2E9FB'}, statCardAnimationStyle, {transitionDelay: '100ms'}]}>
-                <Text style={styles.statValue}>{stats.missed}</Text>
-                <Text style={styles.statLabel}>Missed</Text>
-            </Animated.View>
-            <Animated.View style={[styles.statCard, {backgroundColor: '#D4FFEA'}, statCardAnimationStyle, {transitionDelay: '200ms'}]}>
-                <Text style={styles.statValue}>{stats.pending}</Text>
-                <Text style={styles.statLabel}>Pending</Text>
-            </Animated.View>
-        </View>
-
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
+            
+            <View style={styles.quoteCarousel}>
+                <Feather name="heart" size={24} color="#D66E5A" />
+                <Text style={styles.quoteText}>{healthQuotes[quoteIndex]}</Text>
+            </View>
+
+            <View style={styles.statsContainer}>
+                <Animated.View style={[styles.statCard, {backgroundColor: '#C2E9FB'}, animatedStyles.statCard(0)]}>
+                    <Feather name="check-circle" size={24} color="#0284C7" />
+                    <Text style={styles.statValue}>{stats.taken}</Text>
+                    <Text style={styles.statLabel}>Taken</Text>
+                </Animated.View>
+                <Animated.View style={[styles.statCard, {backgroundColor: '#FFDDC1'}, animatedStyles.statCard(1)]}>
+                    <Feather name="x-circle" size={24} color="#F97316" />
+                    <Text style={styles.statValue}>{stats.missed}</Text>
+                    <Text style={styles.statLabel}>Missed</Text>
+                </Animated.View>
+                <Animated.View style={[styles.statCard, {backgroundColor: '#D4FFEA'}, animatedStyles.statCard(2)]}>
+                    <Feather name="clock" size={24} color="#10B981" />
+                    <Text style={styles.statValue}>{stats.pending}</Text>
+                    <Text style={styles.statLabel}>Pending</Text>
+                </Animated.View>
+            </View>
+
             <View style={styles.medicationSection}>
                 <Text style={styles.sectionTitle}>Today's Medicines</Text>
                 <TouchableOpacity onPress={() => router.push('/history')}>
@@ -160,25 +158,24 @@ export default function HomeScreen() {
                 </TouchableOpacity>
             </View>
 
-            <Animated.View style={listAnimationStyle}>
+            <Animated.View style={animatedStyles.list}>
                 {medicines.length > 0 ? medicines.map((med, index) => {
                     const statusStyle = getStatusStyle(med.status);
                     return (
-                        <TouchableOpacity key={`${med.id}-${index}`} onPress={() => openModal(med)}>
-                            <View style={styles.medicationCard}>
-                                <View style={[styles.statusIndicator, {backgroundColor: statusStyle.color}]}>
-                                    <FontAwesome5 name={statusStyle.icon} size={16} color="#FFFFFF" />
-                                </View>
-                                <View style={styles.medicationInfo}>
-                                    <Text style={styles.medicationName}>{med.name}</Text>
-                                    <Text style={styles.medicationDosage}>{med.dosage}</Text>
-                                </View>
-                                <Text style={styles.medicationTime}>{med.time}</Text>
-                            </View>
+                        <TouchableOpacity key={index} onPress={() => openModal(med)} style={styles.medicationCard}>
+                          <View style={[styles.statusIndicator, {borderColor: statusStyle.color}]}>
+                              <Feather name={statusStyle.icon} size={22} color={statusStyle.color} />
+                          </View>
+                          <View style={styles.medicationInfo}>
+                              <Text style={styles.medicationName}>{med.name}</Text>
+                              <Text style={styles.medicationDosage}>{med.dosage}</Text>
+                          </View>
+                          <Text style={styles.medicationTime}>{med.time}</Text>
                         </TouchableOpacity>
                     );
                 }) : (
                     <View style={styles.noMedicationContainer}>
+                        <Feather name="info" size={24} color="#64748B" />
                         <Text style={styles.noMedicationText}>No medicines for today.</Text>
                     </View>
                 )}
@@ -186,35 +183,36 @@ export default function HomeScreen() {
         </ScrollView>
 
         <Modal
-            animationType="slide"
+            animationType="fade"
             transparent={true}
             visible={modalVisible}
-            onRequestClose={() => setModalVisible(!modalVisible)}
+            onRequestClose={() => setModalVisible(false)}
         >
             <View style={styles.centeredView}>
-                <View style={styles.modalView}>
+                <ImageBackground source={require('../../assets/images/texture.png')} style={styles.modalView} imageStyle={{borderRadius: 20}}>
                     <Text style={styles.modalText}>{selectedMed?.name}</Text>
+                    <Text style={styles.modalSubText}>{selectedMed?.dosage} - {selectedMed?.time}</Text>
                     <View style={styles.modalButtons}>
                         <TouchableOpacity style={[styles.modalButton, {backgroundColor: '#22C55E'}]} onPress={() => handleHistoryEvent('taken')}>
-                            <Feather name="check" size={24} color="#FFFFFF" />
+                            <Feather name="check" size={20} color="#FFFFFF" />
                             <Text style={styles.modalButtonText}>Taken</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.modalButton, {backgroundColor: '#EF4444'}]} onPress={() => handleHistoryEvent('missed')}>
-                            <Feather name="x" size={24} color="#FFFFFF" />
+                            <Feather name="x" size={20} color="#FFFFFF" />
                             <Text style={styles.modalButtonText}>Missed</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.modalButton, {backgroundColor: '#F59E0B'}]} onPress={() => handleHistoryEvent('snoozed')}>
-                            <Feather name="clock" size={24} color="#FFFFFF" />
-                            <Text style={styles.modalButtonText}>Take Later</Text>
+                            <Feather name="clock" size={20} color="#FFFFFF" />
+                            <Text style={styles.modalButtonText}>Snooze</Text>
                         </TouchableOpacity>
                     </View>
                     <TouchableOpacity
                         style={styles.closeButton}
-                        onPress={() => setModalVisible(!modalVisible)}
+                        onPress={() => setModalVisible(false)}
                     >
                         <Text style={styles.textStyle}>Close</Text>
                     </TouchableOpacity>
-                </View>
+                </ImageBackground>
             </View>
         </Modal>
     </SafeAreaView>
@@ -224,189 +222,186 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F9FA',
+        backgroundColor: '#F0F4F8',
     },
     quoteCarousel: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 15,
+        borderRadius: 20,
         padding: 20,
         marginHorizontal: 20,
-        marginVertical: 10,
+        marginVertical: 15,
+        elevation: 3,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 5 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5,
+        shadowRadius: 4,
+        flexDirection: 'row',
         alignItems: 'center',
     },
     quoteText: {
-        fontSize: 16,
+        fontSize: 15,
         fontStyle: 'italic',
-        color: '#4B5563',
+        color: '#4A5568',
         textAlign: 'center',
+        flex: 1,
+        marginLeft: 15,
     },
-    avatarContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#E2E8F0',
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
-      avatarText: {
-        fontSize: 18,
-        color: '#4c669f',
-        fontWeight: 'bold',
-      },
     statsContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: cardPadding,
-        marginTop: 5,
-        marginBottom: 10,
+        justifyContent: 'space-around',
+        height: 100,
+        paddingHorizontal: 20,
+        marginBottom: 20,
     },
     statCard: {
         borderRadius: 20,
-        paddingVertical: 20,
-        paddingHorizontal: 10,
+        padding: 15,
         alignItems: 'center',
-        width: statCardWidth,
+        height: 100,
+        width: (width - 80) / 3,
+        elevation: 4,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 20,
-        elevation: 10
+        shadowRadius: 8,
     },
     statValue: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: 'bold',
-        color: '#333333',
+        color: '#1E293B',
+        marginTop: 8,
     },
     statLabel: {
-        fontSize: 14,
-        color: '#555555',
-        marginTop: 6,
-        fontWeight: '600',
+        fontSize: 13,
+        color: '#475569',
+        marginTop: 2,
+        marginBottom: 2,
+        fontWeight: '500',
     },
     medicationSection: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        marginTop: 25,
+        paddingHorizontal: 25,
         marginBottom: 10,
     },
     sectionTitle: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#1E293B',
     },
     seeAll: {
-        color: '#4c669f',
-        fontSize: 16,
+        color: '#D66E5A',
+        fontSize: 15,
         fontWeight: '700',
     },
     medicationCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 18,
-        padding: 18,
+        borderRadius: 15,
+        padding: 20,
         marginHorizontal: 20,
-        marginTop: 15,
+        marginTop: 10,
         flexDirection: 'row',
         alignItems: 'center',
         elevation: 2,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
-        shadowRadius: 4,
+        shadowRadius: 2,
     },
     statusIndicator: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        borderWidth: 2,
         justifyContent: 'center',
         alignItems: 'center',
+        marginRight: 15,
     },
     medicationInfo: {
         flex: 1,
-        marginLeft: 15,
     },
     medicationName: {
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: 'bold',
-        color: '#1E293B',
+        color: '#2D3748',
     },
     medicationDosage: {
         fontSize: 14,
-        color: '#64748B',
-        marginTop: 3,
+        color: '#718096',
+        marginTop: 4,
     },
     medicationTime: {
         fontSize: 16,
-        fontWeight: '500',
-        color: '#1E293B',
+        fontWeight: '600',
+        color: '#4A5568',
     },
     centeredView: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.6)',
     },
-    modalView: {
-        margin: 20,
-        backgroundColor: "white",
+    modalView: {        
+        width: '85%',        
         borderRadius: 20,
-        padding: 35,
+        padding: 20,
         alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5
     },
     modalText: {
-        marginBottom: 15,
-        textAlign: "center",
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: 'bold',
+        color: '#2D3748',
+        textAlign: "center",
+    },
+    modalSubText: {
+        fontSize: 16,
+        color: '#4A5568',
+        marginBottom: 25,
+        textAlign: 'center',
     },
     modalButtons: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        justifyContent: 'space-between',
         width: '100%',
+        marginBottom: 20,
     },
     modalButton: {
-        borderRadius: 10,
-        padding: 10,
-        elevation: 2,
+        borderRadius: 15,
+        paddingVertical: 12,
+        paddingHorizontal: 12,
         flexDirection: 'row',
         alignItems: 'center',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
     },
     modalButtonText: {
         color: 'white',
         fontWeight: 'bold',
         textAlign: 'center',
-        marginLeft: 10,
+        marginLeft: 8,
     },
     closeButton: {
-        marginTop: 20,
+        marginTop: 10,
     },
     textStyle: {
-        color: '#4c669f',
+        color: '#D66E5A',
         fontWeight: 'bold',
         textAlign: 'center',
+        fontSize: 16,
     },
     noMedicationContainer: {
         alignItems: 'center',
-        marginTop: 50,
+        marginTop: 40,
         paddingHorizontal: 20,
     },
     noMedicationText: {
         fontSize: 16,
         color: '#64748B',
         textAlign: 'center',
+        marginTop: 10,
     },
 });

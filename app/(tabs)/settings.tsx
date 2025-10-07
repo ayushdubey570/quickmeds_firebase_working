@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
   profileInfo: {
     flex: 1,
     marginLeft: 20,
+    marginTop: 15,
   },
   profileName: {
     fontSize: 22,

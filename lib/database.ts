@@ -157,19 +157,19 @@ export const getAdherenceData = () => {
 
         if (history.length === 0) {
             return {
+                pieChartData: [],
                 weekly: { labels: [], data: [] },
                 monthly: { labels: [], data: [] },
-                overall: 0,
+                overallAdherence: 0,
                 totalMedicines: medicines.length,
             };
         }
 
-        // Overall Adherence
-        const takenOverall = history.filter(h => h.status === 'taken').length;
-        const missedOverall = history.filter(h => h.status === 'missed').length;
-        const overall = (takenOverall + missedOverall) > 0
-            ? Math.round((takenOverall / (takenOverall + missedOverall)) * 100)
-            : 0;
+        const taken = history.filter(h => h.status === 'taken').length;
+        const missed = history.filter(h => h.status === 'missed').length;
+        const pending = history.filter(h => h.status === 'pending' || h.status === 'snoozed').length;
+
+        const overallAdherence = (taken + missed) > 0 ? Math.round((taken / (taken + missed)) * 100) : 0;
 
         // Weekly Adherence Chart
         const weeklyLabels = [];
@@ -218,20 +218,25 @@ export const getAdherenceData = () => {
             monthlyData.push(monthAdherence);
         }
 
-
         return {
+            pieChartData: [
+                { name: "Taken", count: taken, color: "#22C55E", legendFontColor: "#7F7F7F", legendFontSize: 15 },
+                { name: "Missed", count: missed, color: "#EF4444", legendFontColor: "#7F7F7F", legendFontSize: 15 },
+                { name: "Pending", count: pending, color: "#F59E0B", legendFontColor: "#7F7F7F", legendFontSize: 15 },
+            ],
             weekly: { labels: weeklyLabels, data: weeklyData },
             monthly: { labels: monthlyLabels, data: monthlyData },
-            overall,
+            overallAdherence,
             totalMedicines: medicines.length,
         };
 
     } catch (error) {
         console.error('Failed to get adherence data', error);
         return {
+            pieChartData: [],
             weekly: { labels: [], data: [] },
             monthly: { labels: [], data: [] },
-            overall: 0,
+            overallAdherence: 0,
             totalMedicines: 0,
         };
     }
