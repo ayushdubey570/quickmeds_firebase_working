@@ -22,7 +22,7 @@ export default function ReportsScreen() {
   return (
     <SafeAreaView style={styles.container}>
         <Header title="Adherence Reports" />
-        <ScrollView contentContainerStyle={{paddingBottom: 20}}>
+        <ScrollView contentContainerStyle={{paddingBottom: 120}}>
 
             <View style={styles.chartCard}>
                 <Text style={styles.cardTitle}>Monthly Adherence</Text>

@@ -104,6 +104,30 @@ export default function TabsLayout() {
           ),
         }}
       />
+       <Tabs.Screen
+        name="help"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="aboutus"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="privacypolicy"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="termsandconditions"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

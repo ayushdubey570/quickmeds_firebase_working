@@ -1,63 +1,43 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-interface HeaderProps {
-  title: string;
-  showProfile?: boolean;
-}
-
-const Header: React.FC<HeaderProps> = ({ title, showProfile }) => {
+export default function Header({ title, showProfile = false }) {
   const router = useRouter();
 
   return (
-    <LinearGradient
-      colors={['#4c669f', '#3b5998', '#192f6a']}
-      style={styles.header}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
-      <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>{title}</Text>
-        {showProfile && (
-          <TouchableOpacity onPress={() => router.push('/(tabs)/settings')}>
-            <Image
-              source={{ uri: "https://i.imgur.com/8i2j8zL.png" }}
-              style={styles.profilePic}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-    </LinearGradient>
+    <View style={styles.headerContainer}>
+      <Text style={styles.headerTitle}>{title}</Text>
+      {showProfile && (
+        <TouchableOpacity onPress={() => router.push('/(tabs)/settings')}>
+          <View style={styles.avatarContainer}>
+            <FontAwesome5 name="user" size={20} color="#4c669f" />
+          </View>
+        </TouchableOpacity>
+      )}
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  header: {
-    paddingTop: 50,
-    paddingBottom: 30,
-    paddingHorizontal: 30,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
-  },
-  headerContent: {
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#F8F9FA',
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#1E293B',
   },
-  profilePic: {
+  avatarContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    backgroundColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
-
-export default Header;
