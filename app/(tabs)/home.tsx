@@ -10,6 +10,14 @@ const { width } = Dimensions.get('window');
 const cardPadding = 25;
 const statCardWidth = (width - cardPadding * 4) / 3;
 
+const healthQuotes = [
+  "The greatest wealth is health.",
+  "A healthy outside starts from the inside.",
+  "To keep the body in good health is a duty, otherwise we shall not be able to keep our mind strong and clear.",
+  "He who has health has hope; and he who has hope, has everything.",
+  "Take care of your body. It’s the only place you have to live."
+];
+
 const getStatusStyle = (status) => {
     switch (status) {
         case 'taken':
@@ -32,6 +40,14 @@ export default function HomeScreen() {
   const statsAnim = useRef(new Animated.Value(0)).current;
   const listAnim = useRef(new Animated.Value(0)).current;
   const [userName, setUserName] = useState('User');
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    const quoteInterval = setInterval(() => {
+      setQuoteIndex((prevIndex) => (prevIndex + 1) % healthQuotes.length);
+    }, 2.16e+7);
+    return () => clearInterval(quoteInterval);
+  }, []);
 
   const loadData = useCallback(() => {
     try {
@@ -117,6 +133,9 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
         <Header title={`Hello, ${userName}`} showProfile={true} name={userName} />
+        <View style={styles.quoteCarousel}>
+          <Text style={styles.quoteText}>{healthQuotes[quoteIndex]}</Text>
+        </View>
 
         <View style={styles.statsContainer}>
             <Animated.View style={[styles.statCard, {backgroundColor: '#FFDDC1'}, statCardAnimationStyle]}>
@@ -207,6 +226,25 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F8F9FA',
     },
+    quoteCarousel: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 15,
+        padding: 20,
+        marginHorizontal: 20,
+        marginVertical: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
+        alignItems: 'center',
+    },
+    quoteText: {
+        fontSize: 16,
+        fontStyle: 'italic',
+        color: '#4B5563',
+        textAlign: 'center',
+    },
     avatarContainer: {
         width: 40,
         height: 40,
@@ -225,6 +263,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: cardPadding,
         marginTop: 5,
+        marginBottom: 10,
     },
     statCard: {
         borderRadius: 20,

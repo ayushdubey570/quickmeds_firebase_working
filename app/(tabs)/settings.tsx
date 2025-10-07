@@ -1,10 +1,18 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, Switch, ScrollView, ImageBackground } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from '@expo/vector-icons';
 import Header from "@/components/Header";
-import Avatar from "@/components/Avatar"; // Import the new Avatar component
+import Avatar from "@/components/Avatar";
+
+const healthQuotes = [
+  "The greatest wealth is health.",
+  "A healthy outside starts from the inside.",
+  "To keep the body in good health is a duty, otherwise we shall not be able to keep our mind strong and clear.",
+  "He who has health has hope; and he who has hope, has everything.",
+  "Take care of your body. It’s the only place you have to live."
+];
 
 const SettingsItem = ({ icon, label, onPress, isSwitch, switchValue, onSwitchChange }) => (
   <TouchableOpacity onPress={onPress} style={styles.settingItem}>
@@ -19,7 +27,7 @@ const SettingsItem = ({ icon, label, onPress, isSwitch, switchValue, onSwitchCha
 const EditProfileSection = ({ name, quote, onEdit }) => (
   <View style={styles.editProfileContainer}>
       <ImageBackground 
-          source={{ uri: 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.freepik.com%2Ffree-vector%2Fflat-medical-twitter-header-design-template_17743570.htm&psig=AOvVaw2kBIIGOgsddp3_dDw3Iviu&ust=1759923569199000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCJjQqdSAkpADFQAAAAAdAAAAABAE' }} 
+          source={require('../../assets/images/header.png')} 
           style={styles.profileHeader}
           imageStyle={{ borderRadius: 15, opacity: 0.8 }}
       >
@@ -28,7 +36,7 @@ const EditProfileSection = ({ name, quote, onEdit }) => (
           <Avatar name={name} size={80} />
           <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{name || "User Name"}</Text>
-              <Text style={styles.profileQuote}>{quote || '"Stay healthy, stay happy."'}</Text>
+              <Text style={styles.profileQuote}>{quote}</Text>
           </View>
           <TouchableOpacity onPress={onEdit} style={styles.editButton}>
               <Feather name="edit-2" size={20} color="#FFFFFF" />
@@ -44,12 +52,15 @@ export default function SettingsScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    const randomQuote = healthQuotes[Math.floor(Math.random() * healthQuotes.length)];
+    setQuote(randomQuote);
+  }, []);
+
   useFocusEffect(() => {
     const fetchUserData = async () => {
       const storedName = await AsyncStorage.getItem("userName");
-      const storedQuote = await AsyncStorage.getItem("userQuote");
       if (storedName) setName(storedName);
-      if (storedQuote) setQuote(storedQuote);
     };
     fetchUserData();
   });
@@ -57,7 +68,6 @@ export default function SettingsScreen() {
   const handleSave = async () => {
     if (name.trim()) {
       await AsyncStorage.setItem("userName", name.trim());
-      await AsyncStorage.setItem("userQuote", quote.trim());
       Alert.alert("Success", "Your profile has been updated.");
       setIsEditing(false);
     } else {
@@ -71,27 +81,23 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <Header title="Settings" showProfile={true} name={name} />
+      <Header title="Settings" showProfile={false} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.profileSection}>
           <EditProfileSection name={name} quote={quote} onEdit={() => setIsEditing(true)} />
           {isEditing && (
             <View style={styles.editingControls}>
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="Enter your name"
-              />
-              <TextInput
-                style={styles.input}
-                value={quote}
-                onChangeText={setQuote}
-                placeholder="Enter your quote"
-              />
-              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              </TouchableOpacity>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter your name"
+                />
+                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                  <Feather name="check" size={24} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>
@@ -145,7 +151,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   profileHeader: {
-    height: 120,
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -153,7 +159,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
-    marginTop: -50,
+    marginTop: -40,
   },
   profileInfo: {
     flex: 1,
@@ -181,25 +187,23 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 20,
   },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   input: {
-    width: "100%",
+    flex: 1,
     height: 50,
     backgroundColor: "#F1F5F9",
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
-    marginBottom: 15,
   },
   saveButton: {
     backgroundColor: "#4c669f",
-    paddingVertical: 15,
+    padding: 12,
     borderRadius: 10,
-    alignItems: "center",
-  },
-  saveButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
+    marginLeft: 10,
   },
   section: {
     marginBottom: 20,

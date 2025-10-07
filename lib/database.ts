@@ -99,47 +99,6 @@ export const fetchHistory = () => {
     }
 };
 
-// Function to get dashboard statistics for a given date
-export const getDashboardStats = (date) => {
-    try {
-        const taken = db.getFirstSync(
-            "SELECT COUNT(*) as count FROM history h JOIN medicines m ON h.medicine_id = m.id WHERE h.status = 'taken' AND h.date = ?",
-            [date]
-        )?.count || 0;
-        const missed = db.getFirstSync(
-            "SELECT COUNT(*) as count FROM history h JOIN medicines m ON h.medicine_id = m.id WHERE h.status = 'missed' AND h.date = ?",
-            [date]
-        )?.count || 0;
-        const snoozed = db.getFirstSync(
-            "SELECT COUNT(*) as count FROM history h JOIN medicines m ON h.medicine_id = m.id WHERE h.status = 'snoozed' AND h.date = ?",
-            [date]
-        )?.count || 0;
-
-        const allMedicines = fetchMedicines();
-        const today = new Date(date).getDay();
-        let totalScheduled = 0;
-
-        allMedicines.forEach(med => {
-            const isToday = med.frequency === 'Daily' || (med.frequency === 'Custom' && JSON.parse(med.selectedDays).includes(today));
-            if (isToday) {
-                totalScheduled += JSON.parse(med.times).length;
-            }
-        });
-
-        const handledCount = taken + missed + snoozed;
-        const pending = totalScheduled - handledCount + snoozed;
-
-        return {
-            taken,
-            missed,
-            pending: pending > 0 ? pending : 0,
-        };
-    } catch (error) {
-        console.error('Failed to get dashboard stats', error);
-        return { taken: 0, missed: 0, pending: 0 };
-    }
-};
-
 // Function to get today's medicines with their status
 export const getTodaysMedicinesWithStatus = (date) => {
     try {
@@ -167,5 +126,25 @@ export const getTodaysMedicinesWithStatus = (date) => {
     } catch (error) {
         console.error("Failed to load medicines with status:", error);
         return [];
+    }
+};
+
+// Function to get dashboard statistics for a given date
+export const getDashboardStats = (date) => {
+    try {
+        const todaysMedicines = getTodaysMedicinesWithStatus(date);
+
+        const taken = todaysMedicines.filter(med => med.status === 'taken').length;
+        const missed = todaysMedicines.filter(med => med.status === 'missed').length;
+        const pending = todaysMedicines.filter(med => med.status === 'pending' || med.status === 'snoozed').length;
+
+        return {
+            taken,
+            missed,
+            pending,
+        };
+    } catch (error) {
+        console.error('Failed to get dashboard stats', error);
+        return { taken: 0, missed: 0, pending: 0 };
     }
 };
