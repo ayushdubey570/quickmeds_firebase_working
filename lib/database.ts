@@ -61,6 +61,16 @@ export const fetchMedicines = () => {
     }
 };
 
+// Function to delete a medicine
+export const deleteMedicine = (id) => {
+    try {
+        return db.runSync('DELETE FROM medicines WHERE id = ?', [id]);
+    } catch (error) {
+        console.error('Failed to delete medicine', error);
+        throw error;
+    }
+};
+
 // Function to update a history event
 export const updateHistoryEvent = (medicine_id, status, date, time) => {
     try {
@@ -78,9 +88,9 @@ export const updateHistoryEvent = (medicine_id, status, date, time) => {
 export const fetchHistory = () => {
     try {
         return db.getAllSync(`
-            SELECT h.id, m.name, m.frequency, h.status, h.date, h.time
+            SELECT h.id, COALESCE(m.name, 'Deleted Medicine') as name, m.frequency, h.status, h.date, h.time
             FROM history h
-            JOIN medicines m ON h.medicine_id = m.id
+            LEFT JOIN medicines m ON h.medicine_id = m.id
             ORDER BY h.date DESC, h.time DESC
         `);
     } catch (error) {
@@ -92,9 +102,18 @@ export const fetchHistory = () => {
 // Function to get dashboard statistics for a given date
 export const getDashboardStats = (date) => {
     try {
-        const taken = db.getFirstSync("SELECT COUNT(*) as count FROM history WHERE status = 'taken' AND date = ?", [date])?.count || 0;
-        const missed = db.getFirstSync("SELECT COUNT(*) as count FROM history WHERE status = 'missed' AND date = ?", [date])?.count || 0;
-        const snoozed = db.getFirstSync("SELECT COUNT(*) as count FROM history WHERE status = 'snoozed' AND date = ?", [date])?.count || 0;
+        const taken = db.getFirstSync(
+            "SELECT COUNT(*) as count FROM history h JOIN medicines m ON h.medicine_id = m.id WHERE h.status = 'taken' AND h.date = ?",
+            [date]
+        )?.count || 0;
+        const missed = db.getFirstSync(
+            "SELECT COUNT(*) as count FROM history h JOIN medicines m ON h.medicine_id = m.id WHERE h.status = 'missed' AND h.date = ?",
+            [date]
+        )?.count || 0;
+        const snoozed = db.getFirstSync(
+            "SELECT COUNT(*) as count FROM history h JOIN medicines m ON h.medicine_id = m.id WHERE h.status = 'snoozed' AND h.date = ?",
+            [date]
+        )?.count || 0;
 
         const allMedicines = fetchMedicines();
         const today = new Date(date).getDay();

@@ -1,21 +1,25 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import Avatar from './Avatar';
 
-export default function Header({ title, showProfile = false }) {
+export default function Header({ title, showProfile = false, name }) {
   const router = useRouter();
 
   return (
-    <View style={styles.headerContainer}>
+    <LinearGradient
+      colors={['#667eea', '#764ba2']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.headerContainer}
+    >
       <Text style={styles.headerTitle}>{title}</Text>
       {showProfile && (
         <TouchableOpacity onPress={() => router.push('/(tabs)/settings')}>
-          <View style={styles.avatarContainer}>
-            <FontAwesome5 name="user" size={20} color="#4c669f" />
-          </View>
+          <Avatar name={name} size={40} />
         </TouchableOpacity>
       )}
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -25,19 +29,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#F8F9FA',
+    paddingTop: 50,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1E293B',
-  },
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E2E8F0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    color: '#FFFFFF',
   },
 });

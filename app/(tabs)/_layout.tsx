@@ -128,6 +128,12 @@ export default function TabsLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="manage-medicines"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

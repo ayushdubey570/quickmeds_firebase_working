@@ -116,7 +116,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-        <Header title={`Hello, ${userName}`} showProfile={true} />
+        <Header title={`Hello, ${userName}`} showProfile={true} name={userName} />
 
         <View style={styles.statsContainer}>
             <Animated.View style={[styles.statCard, {backgroundColor: '#FFDDC1'}, statCardAnimationStyle]}>
@@ -207,11 +207,24 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F8F9FA',
     },
+    avatarContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#E2E8F0',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      avatarText: {
+        fontSize: 18,
+        color: '#4c669f',
+        fontWeight: 'bold',
+      },
     statsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingHorizontal: cardPadding,
-        marginTop: -25,
+        marginTop: 5,
     },
     statCard: {
         borderRadius: 20,
