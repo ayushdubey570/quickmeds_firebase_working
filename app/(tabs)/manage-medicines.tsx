@@ -24,7 +24,7 @@ const MedicineItem = ({ item, onDelete }) => {
         <View style={styles.card}>
             <View style={styles.cardHeader}>
                 <Text style={styles.medicineName}>{item.name}</Text>
-                <TouchableOpacity onPress={() => onDelete(item.id)} style={styles.deleteButton}>
+                <TouchableOpacity onPress={() => onDelete(item.allIds)} style={styles.deleteButton}>
                     <Feather name="trash-2" size={22} color="#EF4444" />
                 </TouchableOpacity>
             </View>
@@ -52,24 +52,47 @@ export default function ManageMedicinesScreen() {
 
   const loadMedicines = () => {
     const allMedicines = fetchMedicines();
-    setMedicines(allMedicines);
+    const groupedMedicines = allMedicines.reduce((acc, medicine) => {
+      if (!acc[medicine.name]) {
+        acc[medicine.name] = {
+          ...medicine,
+          allIds: [medicine.id]
+        };
+      } else {
+        try {
+            const existingTimes = JSON.parse(acc[medicine.name].times);
+            const newTimes = JSON.parse(medicine.times);
+            const mergedTimes = [...new Set([...existingTimes, ...newTimes])];
+            acc[medicine.name].times = JSON.stringify(mergedTimes);
+            acc[medicine.name].allIds.push(medicine.id);
+        } catch (e) {
+            console.error("Error parsing times for grouping", e);
+        }
+      }
+      return acc;
+    }, {});
+
+    const processedMedicines = Object.values(groupedMedicines);
+    setMedicines(processedMedicines);
   };
 
   useFocusEffect(() => {
     loadMedicines();
   });
 
-  const handleDelete = (id) => {
+  const handleDelete = (ids) => {
     Alert.alert(
       "Delete Medicine",
-      "Are you sure you want to delete this medicine? This action cannot be undone.",
+      "Are you sure you want to delete this medicine and all its associated times? This action cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         { 
           text: "Delete", 
           style: "destructive", 
           onPress: () => {
-            deleteMedicine(id);
+            ids.forEach(id => {
+                deleteMedicine(id);
+            });
             loadMedicines();
           }
         },
@@ -105,6 +128,7 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 20,
+    paddingBottom: 80, // Added padding to the bottom
   },
   card: {
     backgroundColor: '#FFFFFF',
