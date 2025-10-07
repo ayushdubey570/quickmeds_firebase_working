@@ -208,12 +208,7 @@ export default function HomeScreen() {
             onRequestClose={() => setModalVisible(false)}
         >
             <View style={styles.centeredView}>
-                <ImageBackground 
-                    source={require('../../assets/images/texture.png')} 
-                    style={styles.modalView}
-                    resizeMode="cover"
-                    imageStyle={styles.modalBgImage}
-                >
+                <View style={styles.modalView}>
                     <Text style={styles.modalText}>{selectedMed?.name}</Text>
                     <Text style={styles.modalSubText}>{selectedMed?.dosage} - {selectedMed?.time}</Text>
                     <View style={styles.modalButtons}>
@@ -236,7 +231,7 @@ export default function HomeScreen() {
                     >
                         <Text style={styles.textStyle}>Close</Text>
                     </TouchableOpacity>
-                </ImageBackground>
+                </View>
             </View>
         </Modal>
     </SafeAreaView>
@@ -367,18 +362,18 @@ const styles = StyleSheet.create({
     },
     modalView: {
         width: '85%',
+        backgroundColor: 'white',
         borderRadius: 20,
         padding: 30,
         alignItems: "center",
-        overflow: 'hidden',
-    },
-    modalBgImage: {
-        borderRadius: 20,
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5
     },
     modalText: {
         fontSize: 22,
