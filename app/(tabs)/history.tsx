@@ -161,14 +161,6 @@ const HistoryScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Medication History" />
-      <View style={styles.toolbar}>
-          <TouchableOpacity style={styles.toolButton} onPress={() => setInfoModalVisible(true)}>
-              <Feather name="help-circle" size={24} color="#4c669f" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolButton} onPress={handleDeleteAll}>
-              <Feather name="trash-2" size={24} color="#EF4444" />
-          </TouchableOpacity>
-      </View>
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrapper}>
           <Feather name="search" size={20} color="#9E9E9E" style={{marginLeft: 10}} />
@@ -180,9 +172,17 @@ const HistoryScreen = () => {
             placeholderTextColor="#9E9E9E"
           />
         </View>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => setFilterModalVisible(true)}>
-          <Feather name="filter" size={22} color="#4c669f" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.toolButton} onPress={() => setInfoModalVisible(true)}>
+              <Feather name="help-circle" size={22} color="#4c669f" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolButton} onPress={handleDeleteAll}>
+              <Feather name="trash-2" size={22} color="#EF4444" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolButton} onPress={() => setFilterModalVisible(true)}>
+            <Feather name="filter" size={22} color="#4c669f" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Modal
@@ -230,14 +230,14 @@ const HistoryScreen = () => {
         onRequestClose={() => setInfoModalVisible(false)}
       >
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+          <View style={styles.infoModalContent}>
+            <TouchableOpacity style={styles.infoModalCloseButton} onPress={() => setInfoModalVisible(false)}>
+              <Feather name="x" size={24} color="#334155" />
+            </TouchableOpacity>
             <Feather name="info" size={40} color="#4c669f" style={{alignSelf: 'center', marginBottom: 15}}/>
             <Text style={styles.infoText}>
-              Even after deleting medicines from the \"Manage Your Medicine\" screen, they remain visible in the history. This is for your convenience in case you have deleted a medicine by mistake and need to reference its history.
+              Even after deleting medicines from the \"Manage Your Medicine\" screen, they remain visible in the history for your convenience.
             </Text>
-            <TouchableOpacity style={styles.applyButton} onPress={() => setInfoModalVisible(false)}>
-                <Text style={styles.applyButtonText}>Got it!</Text>
-              </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -256,21 +256,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  toolbar: {
+  headerActions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0'
+    alignItems: 'center',
+    marginLeft: 10,
   },
   toolButton: {
-    paddingHorizontal: 10,
+    padding: 10,
   },
   searchContainer: {
     flexDirection: 'row',
-    padding: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     borderBottomWidth: 1,
@@ -290,21 +287,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#334155'
   },
-  filterBtn: {
-    padding: 10,
-    marginLeft: 10,
-  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 25,
     width: '90%',
+  },
+  infoModalContent: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 30,
+    paddingTop: 40,
+    width: '90%',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    position: 'relative',
+  },
+  infoModalCloseButton: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    zIndex: 1,
   },
   modalTitle: {
     fontSize: 22,
@@ -371,7 +386,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     paddingVertical: 12,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: 'center
     flex: 1,
     marginRight: 10,
   },
@@ -440,7 +455,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: '#4A5568',
     textAlign: 'center',
-    marginBottom: 25,
+    marginBottom: 15,
     lineHeight: 24,
   },
 });
