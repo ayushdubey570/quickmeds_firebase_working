@@ -1,16 +1,15 @@
 import { StyleSheet, Text, View, ScrollView, SafeAreaView, TouchableOpacity, Animated, TextInput, Modal } from 'react-native';
 import React, { useState, useRef, useCallback } from 'react';
 import Header from '@/components/Header';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { fetchHistory } from '../../lib/database';
 
 const HistoryScreen = () => {
   const [history, setHistory] = useState({});
   const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
   const [nameFilter, setNameFilter] = useState('');
-  const [timeFilter, setTimeFilter] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -47,31 +46,49 @@ const HistoryScreen = () => {
   const getStatusStyle = (status) => {
     switch (status) {
       case 'taken':
-        return { backgroundColor: '#22C55E', icon: 'check' };
+        return { backgroundColor: '#E8F5E9', color: '#4CAF50', icon: 'check-circle' };
       case 'missed':
-        return { backgroundColor: '#EF4444', icon: 'times' };
+        return { backgroundColor: '#FFEBEE', color: '#F44336', icon: 'x-circle' };
       case 'snoozed':
-        return { backgroundColor: '#F59E0B', icon: 'clock' };
+        return { backgroundColor: '#FFFDE7', color: '#FFC107', icon: 'clock' };
       default:
-        return { backgroundColor: '#64748B', icon: 'question' };
+        return { backgroundColor: '#F5F5F5', color: '#9E9E9E', icon: 'help-circle' };
     }
   };
 
   const clearFilters = () => {
     setStatusFilter('all');
-    setDateFilter('');
+    setDateFilter('all');
     setNameFilter('');
-    setTimeFilter('');
+    setModalVisible(false);
   };
 
   const renderHistory = () => {
     const filteredHistory = Object.keys(history).reduce((acc, date) => {
       const items = history[date].filter(item => {
         const statusMatch = statusFilter === 'all' || item.status === statusFilter;
-        const dateMatch = dateFilter === '' || date.includes(dateFilter);
         const nameMatch = nameFilter === '' || item.name.toLowerCase().includes(nameFilter.toLowerCase());
-        const timeMatch = timeFilter === '' || item.time.includes(timeFilter);
-        return statusMatch && dateMatch && nameMatch && timeMatch;
+        
+        let dateMatch = false;
+        if (dateFilter === 'all') {
+          dateMatch = true;
+        } else {
+          const today = new Date();
+          const itemDate = new Date(date);
+          if (dateFilter === 'today') {
+            dateMatch = itemDate.toDateString() === today.toDateString();
+          } else if (dateFilter === 'yesterday') {
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            dateMatch = itemDate.toDateString() === yesterday.toDateString();
+          } else if (dateFilter === 'last7days') {
+            const last7days = new Date();
+            last7days.setDate(today.getDate() - 7);
+            dateMatch = itemDate >= last7days;
+          }
+        }
+        
+        return statusMatch && nameMatch && dateMatch;
       });
 
       if (items.length > 0) {
@@ -87,41 +104,57 @@ const HistoryScreen = () => {
     return Object.keys(filteredHistory).map(date => (
       <View key={date}>
         <Text style={styles.dateHeader}>{new Date(date).toDateString()}</Text>
-        {filteredHistory[date].map((item) => (
-          <Animated.View key={item.id} style={{ opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
-            <View style={styles.historyItem}>
-              <View style={[styles.statusIcon, { backgroundColor: getStatusStyle(item.status).backgroundColor }]}>
-                <FontAwesome5 name={getStatusStyle(item.status).icon} size={16} color="#FFFFFF" />
-              </View>
-              <View style={styles.historyDetails}>
-                <Text style={styles.medicationName}>{item.name}</Text>
-                <Text style={styles.medicationTime}>{`${item.frequency} at ${item.time}`}</Text>
-              </View>
-              <Text style={styles.statusText}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
-            </View>
-          </Animated.View>
-        ))}
+        {filteredHistory[date].map((item) => {
+            const statusStyle = getStatusStyle(item.status)
+            return (
+              <Animated.View key={item.id} style={{ opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
+                <View style={styles.historyItem}>
+                  <View style={[styles.statusIcon, { backgroundColor: statusStyle.backgroundColor }]}>
+                    <Feather name={statusStyle.icon} size={20} color={statusStyle.color} />
+                  </View>
+                  <View style={styles.historyDetails}>
+                    <Text style={styles.medicationName}>{item.name}</Text>
+                    <Text style={styles.medicationTime}>{`${item.frequency} at ${item.time}`}</Text>
+                  </View>
+                  <Text style={[styles.statusText, {color: statusStyle.color}]}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</Text>
+                </View>
+              </Animated.View>
+            )
+        })}
       </View>
     ));
   };
+
+  const FilterOption = ({value, label, icon, currentFilter, setFilter}) => (
+    <TouchableOpacity 
+        style={[styles.filterOption, currentFilter === value && styles.activeFilterOption]} 
+        onPress={() => setFilter(value)}>
+        <Feather name={icon} size={20} color={currentFilter === value ? '#FFFFFF' : '#4c669f'} />
+        <Text style={[styles.filterOptionText, currentFilter === value && styles.activeFilterOptionText]}>{label}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Medication History" />
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by medicine name..."
-          value={nameFilter}
-          onChangeText={setNameFilter}
-        />
+        <View style={styles.searchInputWrapper}>
+          <Feather name="search" size={20} color="#9E9E9E" style={{marginLeft: 10}} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by medicine name..."
+            value={nameFilter}
+            onChangeText={setNameFilter}
+            placeholderTextColor="#9E9E9E"
+          />
+        </View>
         <TouchableOpacity style={styles.filterBtn} onPress={() => setModalVisible(true)}>
-          <FontAwesome5 name="filter" size={20} color="#4c669f" />
+          <Feather name="filter" size={22} color="#4c669f" />
         </TouchableOpacity>
       </View>
 
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
@@ -129,42 +162,35 @@ const HistoryScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Filter Options</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Filter by Date (YYYY-MM-DD)"
-              value={dateFilter}
-              onChangeText={setDateFilter}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Filter by Time (HH:MM)"
-              value={timeFilter}
-              onChangeText={setTimeFilter}
-            />
-            <TouchableOpacity style={styles.applyButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.applyButtonText}>Apply</Text>
-            </TouchableOpacity>
+            <View style={styles.filterGroup}>
+                <Text style={styles.filterLabel}>Status</Text>
+                <View style={styles.filterOptionsContainer}>
+                    <FilterOption value="all" label="All" icon="list" currentFilter={statusFilter} setFilter={setStatusFilter} />
+                    <FilterOption value="taken" label="Taken" icon="check-circle" currentFilter={statusFilter} setFilter={setStatusFilter} />
+                    <FilterOption value="missed" label="Missed" icon="x-circle" currentFilter={statusFilter} setFilter={setStatusFilter} />
+                    <FilterOption value="snoozed" label="Snoozed" icon="clock" currentFilter={statusFilter} setFilter={setStatusFilter} />
+                </View>
+            </View>
+            <View style={styles.filterGroup}>
+                <Text style={styles.filterLabel}>Date</Text>
+                <View style={styles.filterOptionsContainer}>
+                    <FilterOption value="all" label="All Time" icon="calendar" currentFilter={dateFilter} setFilter={setDateFilter} />
+                    <FilterOption value="today" label="Today" icon="sun" currentFilter={dateFilter} setFilter={setDateFilter} />
+                    <FilterOption value="yesterday" label="Yesterday" icon="arrow-left" currentFilter={dateFilter} setFilter={setDateFilter} />
+                    <FilterOption value="last7days" label="Last 7 Days" icon="bar-chart-2" currentFilter={dateFilter} setFilter={setDateFilter} />
+                </View>
+            </View>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
+                <Text style={styles.clearButtonText}>Clear Filters</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.applyButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.applyButtonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
-
-      <View style={styles.filterContainer}>
-        <TouchableOpacity style={[styles.filterButton, statusFilter === 'all' && styles.activeFilter]} onPress={() => setStatusFilter('all')}>
-          <Text style={[styles.filterText, statusFilter === 'all' && styles.activeFilterText]}>All</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.filterButton, statusFilter === 'taken' && styles.activeFilter]} onPress={() => setStatusFilter('taken')}>
-          <Text style={[styles.filterText, statusFilter === 'taken' && styles.activeFilterText]}>Taken</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.filterButton, statusFilter === 'missed' && styles.activeFilter]} onPress={() => setStatusFilter('missed')}>
-          <Text style={[styles.filterText, statusFilter === 'missed' && styles.activeFilterText]}>Missed</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.filterButton, statusFilter === 'snoozed' && styles.activeFilter]} onPress={() => setStatusFilter('snoozed')}>
-          <Text style={[styles.filterText, statusFilter === 'snoozed' && styles.activeFilterText]}>Snoozed</Text>
-        </TouchableOpacity>
-      </View>
-      <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
-          <Text style={styles.clearButtonText}>Clear Filters</Text>
-        </TouchableOpacity>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.historyList}>
         {renderHistory()}
@@ -182,18 +208,25 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: 'row',
-    padding: 10,
+    padding: 15,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0'
+  },
+  searchInputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
   },
   searchInput: {
     flex: 1,
-    height: 40,
-    borderColor: '#E2E8F0',
-    borderWidth: 1,
-    borderRadius: 8,
+    height: 45,
     paddingHorizontal: 10,
-    backgroundColor: '#F8F9FA',
+    fontSize: 16,
+    color: '#334155'
   },
   filterBtn: {
     padding: 10,
@@ -207,65 +240,84 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
+    borderRadius: 20,
+    padding: 25,
+    width: '90%',
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 20,
+    color: '#334155',
+    textAlign: 'center'
   },
-  input: {
-    height: 40,
-    borderColor: '#E2E8F0',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: '#F8F9FA',
-    marginBottom: 10,
+  filterGroup: {
+      marginBottom: 20,
+  },
+  filterLabel: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#475569',
+      marginBottom: 15,
+  },
+  filterOptionsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+  },
+  filterOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+      backgroundColor: '#F1F5F9',
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: '#E2E8F0'
+  },
+  activeFilterOption: {
+      backgroundColor: '#4c669f',
+      borderColor: '#4c669f'
+  },
+  filterOptionText: {
+      marginLeft: 8,
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#4c669f'
+  },
+  activeFilterOptionText: {
+      color: '#FFFFFF'
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
   },
   applyButton: {
     backgroundColor: '#4c669f',
-    padding: 10,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: 'center',
+    flex: 1,
+    marginLeft: 10,
   },
   applyButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-  },
-  filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    backgroundColor: '#F1F5F9',
-  },
-  activeFilter: {
-    backgroundColor: '#4c669f',
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#334155',
-  },
-  activeFilterText: {
-    color: '#FFFFFF',
+    fontSize: 16
   },
   clearButton: {
-    padding: 10,
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    flex: 1,
+    marginRight: 10,
   },
   clearButtonText: {
     color: '#4c669f',
     fontWeight: 'bold',
+    fontSize: 16
   },
   historyList: {
     padding: 20,
@@ -275,7 +327,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#334155',
-    marginBottom: 10,
+    marginBottom: 15,
     marginTop: 10,
   },
   historyItem: {
@@ -292,9 +344,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   statusIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -315,7 +367,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#334155',
   },
   noHistoryText: {
     textAlign: 'center',
