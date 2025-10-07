@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   pieContainer: {
-    flex: 4.5,
+    flex: 1.5,
   },
   breakdownContainer: {
     flex: 1,
