@@ -110,7 +110,7 @@ export default function HomeScreen() {
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      updateHistoryEvent(selectedMed.id, status, today, selectedMed.time);
+      updateHistoryEvent(selectedMed.id, selectedMed.name, status, today, selectedMed.time);
       setModalVisible(false);
       loadData(); // Refresh data
     } catch (error) {

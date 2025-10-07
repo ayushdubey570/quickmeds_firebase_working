@@ -23,11 +23,11 @@ const init = () => {
       CREATE TABLE history (
         id INTEGER PRIMARY KEY NOT NULL,
         medicine_id INTEGER NOT NULL,
+        medicine_name TEXT NOT NULL,
         status TEXT NOT NULL,
         date TEXT NOT NULL,
         time TEXT NOT NULL,
-        UNIQUE(medicine_id, date, time),
-        FOREIGN KEY (medicine_id) REFERENCES medicines (id)
+        UNIQUE(medicine_id, date, time)
       );
     `);
     console.log('Database initialized.');
@@ -73,11 +73,11 @@ export const deleteMedicine = (id) => {
 };
 
 // Function to update a history event
-export const updateHistoryEvent = (medicine_id, status, date, time) => {
+export const updateHistoryEvent = (medicine_id, medicine_name, status, date, time) => {
     try {
         return db.runSync(
-            'INSERT INTO history (medicine_id, status, date, time) VALUES (?, ?, ?, ?) ON CONFLICT(medicine_id, date, time) DO UPDATE SET status = excluded.status',
-            [medicine_id, status, date, time]
+            'INSERT INTO history (medicine_id, medicine_name, status, date, time) VALUES (?, ?, ?, ?, ?) ON CONFLICT(medicine_id, date, time) DO UPDATE SET status = excluded.status, medicine_name = excluded.medicine_name',
+            [medicine_id, medicine_name, status, date, time]
         );
     } catch (error) {
         console.error('Failed to update history event', error);
@@ -89,7 +89,7 @@ export const updateHistoryEvent = (medicine_id, status, date, time) => {
 export const fetchHistory = () => {
     try {
         return db.getAllSync(`
-            SELECT h.id, COALESCE(m.name, 'Deleted Medicine') as name, m.frequency, h.status, h.date, h.time
+            SELECT h.id, COALESCE(m.name, h.medicine_name) as name, m.frequency, h.status, h.date, h.time
             FROM history h
             LEFT JOIN medicines m ON h.medicine_id = m.id
             ORDER BY h.date DESC, h.time DESC
