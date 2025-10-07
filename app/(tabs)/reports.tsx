@@ -9,6 +9,19 @@ import React, { useState, useCallback } from "react";
 
 const screenWidth = Dimensions.get("window").width;
 
+const getIconForStatus = (status) => {
+    switch (status) {
+        case 'Taken':
+            return 'check-circle';
+        case 'Missed':
+            return 'x-circle';
+        case 'Pending':
+            return 'clock';
+        default:
+            return 'help-circle';
+    }
+};
+
 export default function ReportsScreen() {
   const [adherenceData, setAdherenceData] = useState(null);
   const router = useRouter();
@@ -29,6 +42,18 @@ export default function ReportsScreen() {
   }
 
   const { pieChartData, weekly, monthly, overallAdherence, totalMedicines } = adherenceData;
+
+  // Ensure specific colors for pie chart items
+  const coloredPieChartData = pieChartData.map(item => {
+      let color;
+      switch(item.name) {
+          case 'Taken': color = '#22C55E'; break;
+          case 'Missed': color = '#EF4444'; break;
+          case 'Pending': color = '#F59E0B'; break;
+          default: color = '#64748B';
+      }
+      return {...item, color };
+  });
 
   const weeklyChartData = {
     labels: weekly.labels,
@@ -68,25 +93,30 @@ export default function ReportsScreen() {
 
             <View style={styles.chartCard}>
                 <Text style={styles.cardTitle}>Adherence Breakdown</Text>
-                <PieChart
-                    data={pieChartData}
-                    width={screenWidth - 50}
-                    height={220}
-                    chartConfig={chartConfig}
-                    accessor={"count"}
-                    backgroundColor={"transparent"}
-                    paddingLeft={"15"}
-                    center={[10, 0]}
-                    absolute
-                    hasLegend={false}
-                />
-                <View style={styles.legendContainer}>
-                  {pieChartData.map((item, index) => (
-                    <View key={index} style={styles.legendItem}>
-                      <View style={[styles.legendColor, { backgroundColor: item.color }]} />
-                      <Text style={styles.legendText}>{item.name}</Text>
+                <View style={styles.breakdownSection}>
+                    <View style={styles.pieContainer}>
+                        <PieChart
+                            data={coloredPieChartData}
+                            width={screenWidth * 0.45}
+                            height={160}
+                            chartConfig={chartConfig}
+                            accessor={"count"}
+                            backgroundColor={"transparent"}
+                            paddingLeft={"0"}
+                            center={[screenWidth * 0.1, 0]}
+                            absolute
+                            hasLegend={false}
+                        />
                     </View>
-                  ))}
+                    <View style={styles.breakdownContainer}>
+                        {coloredPieChartData.map((item, index) => (
+                        <View key={index} style={styles.breakdownItem}>
+                            <Feather name={getIconForStatus(item.name)} size={20} color={item.color} />
+                            <Text style={[styles.breakdownLabel, { color: item.color }]}>{item.name}</Text>
+                            <Text style={styles.breakdownCount}>{item.count}</Text>
+                        </View>
+                        ))}
+                    </View>
                 </View>
             </View>
 
@@ -189,29 +219,41 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#334155',
-    marginBottom: 10,
+    marginBottom: 15,
+    alignSelf: 'flex-start'
   },
   chart: {
       borderRadius: 16,
   },
-  legendContainer: {
+  breakdownSection: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  legendItem: {
-    flexDirection: 'row',
+    width: '100%',
     alignItems: 'center',
-    marginHorizontal: 10,
+    justifyContent: 'space-between',
   },
-  legendColor: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 5,
+  pieContainer: {
+    flex: 4.5,
   },
-  legendText: {
-    fontSize: 12,
-    color: '#64748B',
+  breakdownContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  breakdownItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 8,
+  },
+  breakdownLabel: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginLeft: 10,
+      flex: 1,
+  },
+  breakdownCount: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: '#334155',
+      minWidth: 30,
+      textAlign: 'right',
   },
 });

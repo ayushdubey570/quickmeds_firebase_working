@@ -149,6 +149,26 @@ export const getDashboardStats = (date) => {
     }
 };
 
+// Function to get adherence statistics
+export const getAdherenceStats = () => {
+    try {
+        const history = db.getAllSync('SELECT * FROM history');
+
+        const taken = history.filter(h => h.status === 'taken').length;
+        const missed = history.filter(h => h.status === 'missed').length;
+        const snoozed = history.filter(h => h.status === 'snoozed').length;
+
+        return {
+            taken,
+            missed,
+            snoozed,
+        };
+    } catch (error) {
+        console.error('Failed to get adherence stats', error);
+        return { taken: 0, missed: 0, snoozed: 0 };
+    }
+};
+
 // Function to get adherence data for reports
 export const getAdherenceData = () => {
     try {

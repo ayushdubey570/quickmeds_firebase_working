@@ -45,10 +45,29 @@ export default function HomeScreen() {
   }
 
   useEffect(() => {
-    const quoteInterval = setInterval(() => {
-      setQuoteIndex((prevIndex) => (prevIndex + 1) % healthQuotes.length);
-    }, 7000);
-    return () => clearInterval(quoteInterval);
+    const updateQuote = async () => {
+      const lastUpdated = await AsyncStorage.getItem('quoteLastUpdated');
+      const now = new Date();
+
+      if (lastUpdated) {
+        const lastUpdatedDate = new Date(lastUpdated);
+        const diffInHours = (now - lastUpdatedDate) / (1000 * 60 * 60);
+        if (diffInHours < 24) {
+          const storedQuoteIndex = await AsyncStorage.getItem('quoteIndex');
+          if (storedQuoteIndex) {
+            setQuoteIndex(parseInt(storedQuoteIndex, 10));
+          }
+          return;
+        }
+      }
+
+      const newIndex = Math.floor(Math.random() * healthQuotes.length);
+      setQuoteIndex(newIndex);
+      await AsyncStorage.setItem('quoteIndex', newIndex.toString());
+      await AsyncStorage.setItem('quoteLastUpdated', now.toISOString());
+    };
+
+    updateQuote();
   }, []);
 
   const loadData = useCallback(() => {
@@ -134,8 +153,8 @@ export default function HomeScreen() {
             </View>
 
             <View style={styles.statsContainer}>
-                <Animated.View style={[styles.statCard, {backgroundColor: '#C2E9FB'}, animatedStyles.statCard(0)]}>
-                    <Feather name="check-circle" size={24} color="#0284C7" />
+                <Animated.View style={[styles.statCard, {backgroundColor: '#D4FFEA'}, animatedStyles.statCard(0)]}>
+                    <Feather name="check-circle" size={24} color="#10B981" />
                     <Text style={styles.statValue}>{stats.taken}</Text>
                     <Text style={styles.statLabel}>Taken</Text>
                 </Animated.View>
@@ -144,8 +163,8 @@ export default function HomeScreen() {
                     <Text style={styles.statValue}>{stats.missed}</Text>
                     <Text style={styles.statLabel}>Missed</Text>
                 </Animated.View>
-                <Animated.View style={[styles.statCard, {backgroundColor: '#D4FFEA'}, animatedStyles.statCard(2)]}>
-                    <Feather name="clock" size={24} color="#10B981" />
+                <Animated.View style={[styles.statCard, {backgroundColor: '#C2E9FB'}, animatedStyles.statCard(2)]}>
+                    <Feather name="clock" size={24} color="#0284C7" />
                     <Text style={styles.statValue}>{stats.pending}</Text>
                     <Text style={styles.statLabel}>Pending</Text>
                 </Animated.View>
@@ -189,7 +208,12 @@ export default function HomeScreen() {
             onRequestClose={() => setModalVisible(false)}
         >
             <View style={styles.centeredView}>
-                <ImageBackground source={require('../../assets/images/texture.png')} style={styles.modalView} imageStyle={{borderRadius: 20}}>
+                <ImageBackground 
+                    source={require('../../assets/images/texture.png')} 
+                    style={styles.modalView}
+                    resizeMode="cover"
+                    imageStyle={{ borderRadius: 20 }}
+                >
                     <Text style={styles.modalText}>{selectedMed?.name}</Text>
                     <Text style={styles.modalSubText}>{selectedMed?.dosage} - {selectedMed?.time}</Text>
                     <View style={styles.modalButtons}>
@@ -248,17 +272,17 @@ const styles = StyleSheet.create({
     },
     statsContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        height: 100,
+        gap: 15,
         paddingHorizontal: 20,
         marginBottom: 20,
     },
     statCard: {
+        flex: 1,
         borderRadius: 20,
-        padding: 15,
+        paddingVertical: 20,
+        paddingHorizontal: 10,
         alignItems: 'center',
-        height: 100,
-        width: (width - 80) / 3,
+        justifyContent: 'center',
         elevation: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -274,8 +298,7 @@ const styles = StyleSheet.create({
     statLabel: {
         fontSize: 13,
         color: '#475569',
-        marginTop: 2,
-        marginBottom: 2,
+        marginTop: 4,
         fontWeight: '500',
     },
     medicationSection: {
@@ -342,10 +365,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: 'rgba(0,0,0,0.6)',
     },
-    modalView: {        
-        width: '85%',        
+    modalView: {
+        width: '85%',
         borderRadius: 20,
-        padding: 20,
+        padding: 30,
         alignItems: "center",
     },
     modalText: {
@@ -369,7 +392,7 @@ const styles = StyleSheet.create({
     modalButton: {
         borderRadius: 15,
         paddingVertical: 12,
-        paddingHorizontal: 12,
+        paddingHorizontal: 15,
         flexDirection: 'row',
         alignItems: 'center',
         elevation: 2,
