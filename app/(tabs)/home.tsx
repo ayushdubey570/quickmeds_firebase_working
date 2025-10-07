@@ -45,7 +45,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const quoteInterval = setInterval(() => {
       setQuoteIndex((prevIndex) => (prevIndex + 1) % healthQuotes.length);
-    }, 2.16e+7);
+    }, 5000);
     return () => clearInterval(quoteInterval);
   }, []);
 

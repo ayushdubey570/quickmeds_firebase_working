@@ -1,55 +1,93 @@
 import { StyleSheet, Text, View, SafeAreaView, Dimensions, ScrollView } from "react-native";
-import { LineChart } from "react-native-chart-kit";
-import { FontAwesome5 } from '@expo/vector-icons';
+import { BarChart } from "react-native-chart-kit";
+import { Feather } from '@expo/vector-icons';
 import Header from "@/components/Header";
+import { getAdherenceData } from "../../lib/database";
+import { useFocusEffect } from "expo-router";
+import React, { useState, useCallback } from "react";
 
 const screenWidth = Dimensions.get("window").width;
 
-const chartData = {
-  labels: ["Jan", "Feb", "Mar", "Apr", "May"],
-  datasets: [
-    {
-      data: [75, 88, 92, 85, 95],
-      color: (opacity = 1) => `rgba(76, 102, 159, ${opacity})`, // optional
-      strokeWidth: 3 // optional
-    },
-  ],
-  legend: ["Adherence Rate"]
-};
-
 export default function ReportsScreen() {
+  const [adherenceData, setAdherenceData] = useState(null);
+
+  const loadAdherenceData = useCallback(() => {
+    const data = getAdherenceData();
+    setAdherenceData(data);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAdherenceData();
+    }, [loadAdherenceData])
+  );
+
+  if (!adherenceData) {
+    return <View style={styles.centered}><Text>Loading...</Text></View>;
+  }
+
+  const { weekly, monthly, overall, totalMedicines } = adherenceData;
+
+  const chartData = {
+    labels: weekly.labels,
+    datasets: [
+      {
+        data: weekly.data,
+      },
+    ],
+  };
+
+  const monthlyChartData = {
+    labels: monthly.labels,
+    datasets: [
+      {
+        data: monthly.data,
+      },
+    ],
+  };
 
   return (
     <SafeAreaView style={styles.container}>
         <Header title="Adherence Reports" />
         <ScrollView contentContainerStyle={{paddingBottom: 120}}>
 
+            <View style={styles.summaryGrid}>
+              <View style={[styles.summaryCard, {backgroundColor: '#E0F2FE'}]}>
+                <Feather name="trending-up" size={28} color="#0284C7" />
+                <Text style={styles.summaryValue}>{`${overall}%`}</Text>
+                <Text style={styles.summaryLabel}>Overall Adherence</Text>
+              </View>
+              <View style={[styles.summaryCard, {backgroundColor: '#E0E7FF'}]}>
+                <Feather name="check-circle" size={28} color="#4338CA" />
+                <Text style={styles.summaryValue}>{totalMedicines}</Text>
+                <Text style={styles.summaryLabel}>Total Medicines</Text>
+              </View>
+            </View>
+
             <View style={styles.chartCard}>
-                <Text style={styles.cardTitle}>Monthly Adherence</Text>
-                <LineChart
+                <Text style={styles.cardTitle}>Last 7 Days</Text>
+                <BarChart
                     data={chartData}
                     width={screenWidth - 50}
                     height={220}
                     chartConfig={chartConfig}
-                    bezier
                     style={styles.chart}
+                    fromZero
+                    showValuesOnTopOfBars
                 />
             </View>
 
-            <View style={styles.summarySection}>
-                <Text style={styles.sectionTitle}>Adherence Summary</Text>
-                <View style={styles.summaryBox}>
-                    <View style={styles.summaryItem}>
-                        <FontAwesome5 name="check-circle" size={30} color="#4CAF50" />
-                        <Text style={styles.summaryValue}>92%</Text>
-                        <Text style={styles.summaryLabel}>Overall Adherence</Text>
-                    </View>
-                    <View style={styles.summaryItem}>
-                        <FontAwesome5 name="pills" size={30} color="#2196F3" />
-                        <Text style={styles.summaryValue}>15</Text>
-                        <Text style={styles.summaryLabel}>Medications</Text>
-                    </View>
-                </View>
+            <View style={styles.chartCard}>
+                <Text style={styles.cardTitle}>Monthly Adherence</Text>
+                <BarChart
+                    data={monthlyChartData}
+                    width={screenWidth - 50}
+                    height={220}
+                    chartConfig={chartConfig}
+                    style={styles.chart}
+                    fromZero
+                    showValuesOnTopOfBars
+                />
             </View>
 
         </ScrollView>
@@ -60,16 +98,50 @@ export default function ReportsScreen() {
 const chartConfig = {
     backgroundGradientFrom: "#FFFFFF",
     backgroundGradientTo: "#FFFFFF",
-    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-    strokeWidth: 2, // optional, default 3
-    barPercentage: 0.5,
+    color: (opacity = 1) => `rgba(76, 102, 159, ${opacity})`,
+    strokeWidth: 2,
+    barPercentage: 0.8,
     useShadows: false,
+    decimalPlaces: 0,
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  summaryGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginHorizontal: 20,
+    marginTop: 20,
+  },
+  summaryCard: {
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    width: '48%',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4
+  },
+  summaryValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginVertical: 8,
+  },
+  summaryLabel: {
+      fontSize: 14,
+      color: '#64748B',
+      fontWeight: '500'
   },
   chartCard: {
       backgroundColor: '#FFFFFF',
@@ -86,47 +158,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#334155',
     marginBottom: 10,
   },
   chart: {
       borderRadius: 16,
   },
-  summarySection: {
-      paddingHorizontal: 20,
-      paddingTop: 10
-  },
-  sectionTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: '#333',
-      marginBottom: 15,
-  },
-  summaryBox: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-  },
-  summaryItem: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 15,
-      padding: 20,
-      width: '48%',
-      alignItems: 'center',
-      elevation: 3,
-      shadowColor: '#000',
-      shadowOffset: {width: 0, height: 2},
-      shadowOpacity: 0.08,
-      shadowRadius: 4
-  },
-  summaryValue: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: '#4c669f',
-      marginVertical: 8,
-  },
-  summaryLabel: {
-      fontSize: 14,
-      color: '#6C757D',
-      fontWeight: '500'
-  }
 });

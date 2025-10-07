@@ -148,3 +148,91 @@ export const getDashboardStats = (date) => {
         return { taken: 0, missed: 0, pending: 0 };
     }
 };
+
+// Function to get adherence data for reports
+export const getAdherenceData = () => {
+    try {
+        const history = db.getAllSync('SELECT * FROM history');
+        const medicines = db.getAllSync('SELECT * FROM medicines');
+
+        if (history.length === 0) {
+            return {
+                weekly: { labels: [], data: [] },
+                monthly: { labels: [], data: [] },
+                overall: 0,
+                totalMedicines: medicines.length,
+            };
+        }
+
+        // Overall Adherence
+        const takenOverall = history.filter(h => h.status === 'taken').length;
+        const missedOverall = history.filter(h => h.status === 'missed').length;
+        const overall = (takenOverall + missedOverall) > 0
+            ? Math.round((takenOverall / (takenOverall + missedOverall)) * 100)
+            : 0;
+
+        // Weekly Adherence Chart
+        const weeklyLabels = [];
+        const weeklyData = [];
+        const today = new Date();
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const dateString = date.toISOString().split('T')[0];
+            
+            const dayHistory = history.filter(h => h.date === dateString);
+            const takenDay = dayHistory.filter(h => h.status === 'taken').length;
+            const missedDay = dayHistory.filter(h => h.status === 'missed').length;
+
+            const dayAdherence = (takenDay + missedDay) > 0
+                ? Math.round((takenDay / (takenDay + missedDay)) * 100)
+                : 0;
+            
+            weeklyLabels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+            weeklyData.push(dayAdherence);
+        }
+
+        // Monthly Adherence Chart
+        const monthlyLabels = [];
+        const monthlyData = [];
+        const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        for (let i = 5; i >= 0; i--) {
+            const monthDate = new Date(currentMonth);
+            monthDate.setMonth(currentMonth.getMonth() - i);
+            const year = monthDate.getFullYear();
+            const month = monthDate.getMonth();
+
+            const monthHistory = history.filter(h => {
+                const hDate = new Date(h.date);
+                return hDate.getFullYear() === year && hDate.getMonth() === month;
+            });
+
+            const takenMonth = monthHistory.filter(h => h.status === 'taken').length;
+            const missedMonth = monthHistory.filter(h => h.status === 'missed').length;
+
+            const monthAdherence = (takenMonth + missedMonth) > 0
+                ? Math.round((takenMonth / (takenMonth + missedMonth)) * 100)
+                : 0;
+            
+            monthlyLabels.push(monthDate.toLocaleDateString('en-US', { month: 'short' }));
+            monthlyData.push(monthAdherence);
+        }
+
+
+        return {
+            weekly: { labels: weeklyLabels, data: weeklyData },
+            monthly: { labels: monthlyLabels, data: monthlyData },
+            overall,
+            totalMedicines: medicines.length,
+        };
+
+    } catch (error) {
+        console.error('Failed to get adherence data', error);
+        return {
+            weekly: { labels: [], data: [] },
+            monthly: { labels: [], data: [] },
+            overall: 0,
+            totalMedicines: 0,
+        };
+    }
+};
